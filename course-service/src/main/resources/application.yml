@@ -1,0 +1,39 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: course-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/course_db
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+
+student:
+  service:
+    base-url: ${STUDENT_SERVICE_URL:http://localhost:8081}
+
+messaging:
+  exchange:
+    course-events: ${COURSE_EVENTS_EXCHANGE:course.events}
+  routing-keys:
+    enrollment-confirmed: ${COURSE_ENROLLMENT_CONFIRMED_KEY:enrollment.confirmed}
+    course-dropped: ${COURSE_DROPPED_KEY:course.dropped}
