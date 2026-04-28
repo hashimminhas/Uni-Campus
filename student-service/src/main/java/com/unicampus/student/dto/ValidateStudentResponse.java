@@ -1,6 +1,7 @@
 package com.unicampus.student.dto;
 
 import com.unicampus.student.domain.AcademicStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,6 +36,10 @@ import java.util.UUID;
 public class ValidateStudentResponse {
 
     private UUID studentId;
+
+    @Schema(description = "True if student status is ACTIVE")
     private boolean isValid;
+
+    @Schema(description = "Current academic status of the student")
     private AcademicStatus academicStatus;
 }
