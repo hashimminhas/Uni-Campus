@@ -54,6 +54,22 @@
 - Restore to ACTIVE → 200 OK, validate again → isValid: true
 - Delete student → 204 No Content
 - Get deleted student → 404 Not Found
-## Step 8: Unit Tests — pending
-## Step 9: Swagger Polish — pending
-## Step 10: Demo Prep — pending
+## Step 8: Unit Tests ✅
+- Created `StudentControllerTest` with @WebMvcTest + MockMvc + @MockBean
+- Test 1: POST /students with valid data → 201 Created
+- Test 2: GET /students/{id} existing student → 200 OK
+- Test 3: GET /students/{id} not found → 404 Not Found
+- Test 4: GET /students/validate/{id} active student → 200 OK, valid=true
+- Test 5: GET /students/validate/{id} not found → 404 Not Found
+- All tests use mocked StudentService — no database needed
+## Step 9: Swagger Polish ✅
+- Added @Tag on StudentController class
+- Added @Operation(summary) on all 6 endpoint methods
+- Added @Schema descriptions on CreateStudentRequest fields
+- Added @Schema on StudentResponse and ValidateStudentResponse
+- Swagger UI now shows clear descriptions for all endpoints and models
+## Step 10: Demo Prep ✅
+- All tests passing (5/5)
+- Swagger UI shows all 6 endpoints with descriptions
+- Full CRUD flow verified
+- Code pushed to repository

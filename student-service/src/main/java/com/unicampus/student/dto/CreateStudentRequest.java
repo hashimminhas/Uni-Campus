@@ -1,5 +1,6 @@
 package com.unicampus.student.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,27 +34,34 @@ import lombok.NoArgsConstructor;
  *       failures and returns the field-level error messages to the caller.</li>
  * </ul>
  */
+@Schema(description = "Request body for registering a new student")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateStudentRequest {
 
+    @Schema(description = "Student's first name")
     @NotBlank
     private String firstName;
 
+    @Schema(description = "Student's last name")
     @NotBlank
     private String lastName;
 
+    @Schema(description = "Student's email address")
     @NotBlank
     @Email
     private String email;
 
+    @Schema(description = "Student's phone number")
     private String phoneNumber;
 
+    @Schema(description = "Academic program name")
     @NotBlank
     private String program;
 
+    @Schema(description = "Year of enrollment")
     @NotNull
     private Integer enrollmentYear;
 }

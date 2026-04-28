@@ -1,6 +1,7 @@
 package com.unicampus.student.dto;
 
 import com.unicampus.student.domain.AcademicStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,7 @@ import java.util.UUID;
  *   <li>StudentController (Step 6) — wraps this in a {@code ResponseEntity} and sends it to the client.</li>
  * </ul>
  */
+@Schema(description = "Student profile response")
 @Data
 @Builder
 @NoArgsConstructor
