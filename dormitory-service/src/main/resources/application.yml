@@ -5,7 +5,7 @@ spring:
   application:
     name: dormitory-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/dormitory_db
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/dormitory_db
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
