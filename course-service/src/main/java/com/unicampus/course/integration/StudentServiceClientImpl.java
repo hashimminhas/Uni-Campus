@@ -20,11 +20,11 @@ public class StudentServiceClientImpl implements StudentServiceClient {
     public boolean isStudentEligible(String studentId) {
         try {
             StudentValidationResponse response = restClient.get()
-                    .uri(studentServiceBaseUrl + "/students/validate/{studentId}", studentId)
+                    .uri(studentServiceBaseUrl + "/students/{studentId}/validate", studentId)
                     .retrieve()
                     .body(StudentValidationResponse.class);
 
-            return true;
+            return response != null && Boolean.TRUE.equals(response.valid());
         } catch (RestClientException ex) {
             throw new DependencyException("Student Service is unavailable");
         }
