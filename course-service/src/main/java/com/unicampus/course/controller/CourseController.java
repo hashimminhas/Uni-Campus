@@ -68,10 +68,4 @@ public class CourseController {
     ) {
         return ResponseEntity.ok(courseService.dropStudent(courseId, studentId));
     }
-
-    @GetMapping("/students/{studentId}/courses")
-    @Operation(summary = "Get all courses where student is actively enrolled")
-    public ResponseEntity<List<CourseResponse>> getStudentCourses(@PathVariable String studentId) {
-        return ResponseEntity.ok(courseService.getStudentCourses(studentId));
-    }
 }
