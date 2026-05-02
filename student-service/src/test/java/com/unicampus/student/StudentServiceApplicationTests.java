@@ -1,4 +1,4 @@
-package com.unicampus.mealplan;
+package com.unicampus.student;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 =======
 @SpringBootTest(properties = "debug=false")
 >>>>>>> 90a899274f252ead0c8ed43ebd487103c28a3074
-class MealPlanServiceApplicationTests {
+class StudentServiceApplicationTests {
 
     @Test
     void contextLoads() {
