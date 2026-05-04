@@ -1,6 +1,6 @@
 # Student Service
 
-The Student Service is the identity foundation of UniCampus. Every student in the system lives here — their profile, their academic status, and whether they are allowed to use other university services. Every other microservice (Course, Exam, Library, etc.) depends on this service to verify a student before doing anything with them.
+The Student Service is the identity foundation of UniCampus. Every student in the system lives here their profile, their academic status, and whether they are allowed to use other university services. Every other microservice (Course, Exam, Library, etc.) depends on this service to verify a student before doing anything with them.
 
 ---
 
@@ -11,43 +11,6 @@ The Student Service is the identity foundation of UniCampus. Every student in th
 - Tracks each student's academic status: `ACTIVE`, `SUSPENDED`, `GRADUATED`, or `ON_LEAVE`
 - Exposes a **validate endpoint** so other services can check if a student is allowed to enrol in courses, sit exams, borrow books, etc.
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Language | Java 21 |
-| Framework | Spring Boot 3.4.5 |
-| Database | PostgreSQL 16 (`student_db`) |
-| ORM | Spring Data JPA (CrudRepository) |
-| Validation | Jakarta Validation (@NotBlank, @Email, @NotNull) |
-| API Docs | SpringDoc OpenAPI (Swagger UI) |
-| Boilerplate | Lombok |
-| Tests | JUnit 5 + MockMvc + @WebMvcTest |
-
----
-
-## Project Structure
-
-```
-student-service/
-├── src/main/java/com/unicampus/student/
-│   ├── controller/     StudentController.java      ← HTTP endpoints
-│   ├── service/        StudentService.java         ← Business logic
-│   ├── repository/     StudentRepository.java      ← Database access
-│   ├── domain/         Student.java, AcademicStatus.java  ← Database entity
-│   ├── dto/            CreateStudentRequest, UpdateStudentRequest,
-│   │                   UpdateStatusRequest, StudentResponse,
-│   │                   ValidateStudentResponse     ← Request/response objects
-│   ├── exception/      StudentNotFoundException, DuplicateEmailException,
-│   │                   GlobalExceptionHandler      ← Error handling
-│   └── config/         OpenApiConfig.java          ← Swagger setup
-└── src/test/java/com/unicampus/student/
-    └── controller/     StudentControllerTest.java  ← Unit tests
-```
-
----
 
 ## How to Run
 
@@ -109,7 +72,7 @@ Returns the full profile of one student.
 ```
 PUT /students/{studentId}
 ```
-Updates a student's profile. You only need to send the fields you want to change — everything else stays the same.
+Updates a student's profile. You only need to send the fields you want to change everything else stays the same.
 
 **Request body (all fields optional):**
 ```json
@@ -158,7 +121,7 @@ Allowed values: `ACTIVE`, `SUSPENDED`, `GRADUATED`, `ON_LEAVE`
 ```
 GET /students/validate/{studentId}
 ```
-This is the integration endpoint. Other microservices call this before allowing a student to do anything — enrol in a course, book an exam slot, borrow a library book, etc.
+This is the integration endpoint. Other microservices call this before allowing a student to do anything enrol in a course, book an exam slot, borrow a library book, etc.
 
 **Response:** `200 OK`
 ```json
@@ -169,9 +132,9 @@ This is the integration endpoint. Other microservices call this before allowing 
 }
 ```
 
-- `valid: true` — only when status is `ACTIVE`
-- `valid: false` — when status is `SUSPENDED`, `GRADUATED`, or `ON_LEAVE`
-- `404 Not Found` — if no student exists with that ID
+- `valid: true` only when status is `ACTIVE`
+- `valid: false` when status is `SUSPENDED`, `GRADUATED`, or `ON_LEAVE`
+- `404 Not Found` if no student exists with that ID
 
 ---
 
@@ -179,7 +142,7 @@ This is the integration endpoint. Other microservices call this before allowing 
 
 Other microservices do **not** access the student database directly. Instead they call the validate endpoint over HTTP before processing any student request.
 
-**Example flow — Course Service enrolling a student:**
+**Example flow Course Service enrolling a student:**
 
 ```
 Student clicks "Enrol" in the frontend
@@ -193,7 +156,7 @@ If valid=false → return error to student ("Your account is suspended")
 If 404         → return error ("Student not found")
 ```
 
-This keeps each service independent — Course Service never needs to know how students are stored, only whether they are valid.
+This keeps each service independent Course Service never needs to know how students are stored, only whether they are valid.
 
 ---
 
@@ -227,7 +190,7 @@ Validation errors (400) also include a field-level breakdown:
 
 ## Running Tests
 
-Tests use an in-memory H2 database — no Docker needed.
+Tests use an in-memory H2 database no Docker needed.
 
 ```bash
 cd student-service
@@ -242,10 +205,3 @@ The tests cover:
 - Getting a student that does not exist → 404
 - Validating an active student → 200, valid=true
 - Validating a student that does not exist → 404
-
----
-
-## Built By
-
-**Hashim** — Student Service, Notification Service  
-Course: Enterprise System Integration (MTAT.03.229), University of Tartu
