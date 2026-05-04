@@ -27,7 +27,7 @@ public class Room {
     private Integer capacity;
     private Integer currentOccupancy;
     
-    @ElementCollection
+    @ElementCollection(fetch = jakarta.persistence.FetchType.EAGER)
     private List<String> amenities;
     
     private Boolean isAvailable;
