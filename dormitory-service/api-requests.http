@@ -1,0 +1,69 @@
+### Variables
+@baseUrl = http://localhost:8086/api/dormitory
+@roomId = <replace_with_actual_room_id>
+@studentId = <replace_with_actual_student_id>
+@assignmentId = <replace_with_actual_assignment_id>
+
+### -----------------------------------------------------
+### Room Management
+### -----------------------------------------------------
+
+### 1. Add a new room
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "roomNumber": "101A",
+  "building": "North Hall",
+  "capacity": 2,
+  "amenities": [
+    "Wi-Fi",
+    "Air Conditioning",
+    "Private Bathroom"
+  ]
+}
+
+###
+
+### 2. Retrieve all rooms
+GET {{baseUrl}}/rooms
+
+###
+
+### 3. Retrieve specific room details
+GET {{baseUrl}}/rooms/{{roomId}}
+
+###
+
+### 4. Check room availability
+GET {{baseUrl}}/rooms/{{roomId}}/availability
+
+###
+
+### -----------------------------------------------------
+### Student Assignments
+### -----------------------------------------------------
+
+### 5. Check student eligibility for housing
+GET {{baseUrl}}/students/{{studentId}}/eligibility
+
+###
+
+### 6. Assign a student to a room
+POST {{baseUrl}}/rooms/{{roomId}}/assign
+Content-Type: application/json
+
+{
+  "studentId": "{{studentId}}",
+  "semester": "Fall 2026"
+}
+
+###
+
+### 7. Get current room assignment for a specific student
+GET {{baseUrl}}/assignments/student/{{studentId}}
+
+###
+
+### 8. Remove a student's room assignment (Move-out/Cancel)
+DELETE {{baseUrl}}/assignments/{{assignmentId}}
