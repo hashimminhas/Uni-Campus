@@ -25,3 +25,6 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /api-docs
+
+student-service:
+  url: http://localhost:8081
