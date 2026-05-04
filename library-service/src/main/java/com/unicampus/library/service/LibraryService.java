@@ -108,7 +108,7 @@ public class LibraryService {
         ValidateStudentResponse response;
         try {
             response = studentWebClient.get()
-                    .uri("/api/student/students/validate/{id}", studentId)
+                    .uri("/students/validate/{id}", studentId)
                     .retrieve()
                     .bodyToMono(ValidateStudentResponse.class)
                     .block();
