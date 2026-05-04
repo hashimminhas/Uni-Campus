@@ -1,5 +1,6 @@
 package com.unicampus.library.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ValidateStudentResponse {
     private UUID studentId;
+    
+    @JsonProperty("isValid")
     private Boolean isValid;
+    
     private String academicStatus;
 }
