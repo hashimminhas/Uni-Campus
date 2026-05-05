@@ -136,4 +136,35 @@ public class LibraryControllerTest {
                 .andExpect(jsonPath("$.message").exists());
     }
 
+    @Test
+    void returnBook_valid_returns200() throws Exception {
+        UUID loanId = UUID.randomUUID();
+        BookLoanResponse response = BookLoanResponse.builder()
+                .loanId(loanId)
+                .bookId(UUID.randomUUID())
+                .bookTitle("Effective Java")
+                .studentId(UUID.randomUUID())
+                .dueDate(LocalDate.now().plusDays(14))
+                .returnedAt(java.time.LocalDateTime.now())
+                .build();
+
+        Mockito.when(libraryService.returnBook(eq(loanId))).thenReturn(response);
+
+        mockMvc.perform(put("/api/library/loans/{id}/return", loanId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.loanId").value(loanId.toString()))
+                .andExpect(jsonPath("$.returnedAt").exists());
+    }
+
+    @Test
+    void getStudentLoans_returns200() throws Exception {
+        UUID studentId = UUID.randomUUID();
+
+        Mockito.when(libraryService.getStudentLoans(eq(studentId))).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/library/loans/student/{studentId}", studentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
 }

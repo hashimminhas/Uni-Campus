@@ -13,6 +13,17 @@ spring:
       ddl-auto: create-drop
     show-sql: false
     open-in-view: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+
+student-service:
+  url: http://localhost:8081
 
 logging:
   level:
