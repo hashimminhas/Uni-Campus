@@ -60,7 +60,6 @@ public class LibraryService {
 
     @Transactional
     public BookLoanResponse borrowBook(UUID bookId, BorrowBookRequest request) {
-        // Validation stub - will be replaced in commit 8
         validateStudent(request.getStudentId());
 
         Book book = bookRepository.findById(bookId)
