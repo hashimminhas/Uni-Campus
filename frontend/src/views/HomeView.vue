@@ -1,29 +1,29 @@
 <template>
   <main class="container">
     <h1>UniCampus - Courses</h1>
-    
+
     <div v-if="loading" class="loading">
       <p>Loading courses...</p>
     </div>
-    
+
     <div v-else-if="error" class="error">
       <p>Error: {{ error }}</p>
     </div>
-    
+
     <div v-else class="courses-section">
       <h2>Available Courses</h2>
-      
+
       <div v-if="courses.length === 0" class="no-courses">
         <p>No courses available</p>
       </div>
-      
+
       <div v-else class="courses-list">
         <div v-for="course in courses" :key="course.courseId" class="course-card">
           <div class="course-header">
             <h3>{{ course.name }}</h3>
             <span class="course-id">ID: {{ course.courseId }}</span>
           </div>
-          
+
           <div class="course-details">
             <p><strong>Instructor:</strong> {{ course.instructor }}</p>
             <p><strong>Credits:</strong> {{ course.credits }}</p>
@@ -31,9 +31,9 @@
             <p><strong>Status:</strong> <span class="status" :class="course.status.toLowerCase()">{{ course.status }}</span></p>
             <p><strong>Capacity:</strong> {{ course.enrolledCount }} / {{ course.capacity }}</p>
           </div>
-          
+
           <div class="course-actions">
-            <button class="btn btn-primary" @click="enrollCourse(course.courseId)" 
+            <button class="btn btn-primary" @click="enrollCourse(course.courseId)"
                     v-if="course.status === 'OPEN' && course.enrolledCount < course.capacity">
               Enroll
             </button>
