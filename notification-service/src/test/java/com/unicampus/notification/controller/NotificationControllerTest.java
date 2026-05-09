@@ -1,5 +1,6 @@
 package com.unicampus.notification.controller;
 
+import com.unicampus.notification.client.StudentServiceClient;
 import com.unicampus.notification.domain.NotificationChannel;
 import com.unicampus.notification.domain.NotificationStatus;
 import com.unicampus.notification.dto.NotificationResponse;
@@ -31,6 +32,9 @@ class NotificationControllerTest {
 
     @MockitoBean
     private NotificationService notificationService;
+
+    @MockitoBean
+    private StudentServiceClient studentServiceClient;
 
     @Test
     void sendNotification_valid_returns201() throws Exception {

@@ -89,3 +89,17 @@
 - All 7 endpoints implemented, tested via Swagger (Step 7), and covered by unit tests (Step 8)
 - Service starts cleanly with docker-compose (PostgreSQL on 5433, RabbitMQ on 5672)
 - Demo flow: POST template → POST notification → GET notification → GET status
+
+## CP2 Task 1: WebClient Integration ✅
+- Added spring-boot-starter-webflux dependency to pom.xml
+- Added student.service.base-url to application.yml
+- Created StudentResponse DTO in client/ package (matches Student Service response)
+- Created StudentServiceClient using WebClient to call GET /students/{id}
+- StudentServiceClient throws StudentNotFoundException if Student Service returns 404
+- Added StudentNotFoundException to exception/ package
+- Added StudentNotFoundException handler to GlobalExceptionHandler (→ 404)
+- Modified NotificationService.sendNotification to call Student Service first
+- If student not found → 404 returned to caller, notification NOT saved
+- If student exists → notification saved and marked SENT as before
+- Updated NotificationControllerTest to @MockitoBean StudentServiceClient
+- Integration: Notification Service now makes a real HTTP call to Student Service
