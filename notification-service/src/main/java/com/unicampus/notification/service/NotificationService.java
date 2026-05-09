@@ -7,6 +7,7 @@ package com.unicampus.notification.service;
  * If a requested notification ID does not exist in the database, the service throws a 404 error automatically.
  * Private helper methods keep the mapping between database records and API responses clean and separate.
  */
+import com.unicampus.notification.client.StudentServiceClient;
 import com.unicampus.notification.domain.Notification;
 import com.unicampus.notification.domain.NotificationStatus;
 import com.unicampus.notification.dto.NotificationResponse;
@@ -21,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class NotificationService {
@@ -29,7 +29,12 @@ public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private StudentServiceClient studentServiceClient;
+
     public NotificationResponse sendNotification(SendNotificationRequest request) {
+        studentServiceClient.getStudent(request.getRecipientId());
+
         Notification notification = mapToEntity(request);
         notification = notificationRepository.save(notification);
 
