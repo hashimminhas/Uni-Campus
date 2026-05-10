@@ -66,7 +66,7 @@ export default {
         this.loading = true;
         this.error = null;
         
-        const response = await fetch('/courses');
+        const response = await fetch('/api/courses');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
