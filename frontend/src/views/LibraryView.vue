@@ -58,7 +58,7 @@ export default {
   },
   methods: {
     isValidUUID(value) {
-      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+      return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     },
 
     async fetchBooks() {
@@ -97,7 +97,7 @@ export default {
       }
 
       if (!this.isValidUUID(studentId)) {
-        alert('Please enter a valid student ID in UUID format.');
+        alert('Please enter a valid student ID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).');
         return;
       }
 
