@@ -49,14 +49,15 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-<<<<<<< HEAD
-=======
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
->>>>>>> 90a899274f252ead0c8ed43ebd487103c28a3074
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>

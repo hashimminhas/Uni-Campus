@@ -36,6 +36,7 @@ cd <your-service>/
 mvn spring-boot:run
 ```
 
+<<<<<<< HEAD
 ### 3. Run Service Tests
 Each backend service can run its tests without starting PostgreSQL because tests use an in-memory H2 database:
 ```bash
@@ -63,6 +64,13 @@ Each service has Swagger UI at:
 `http://localhost:<PORT>/swagger-ui.html`
 
 ### 6. RabbitMQ Management
+=======
+### 3. Access Swagger UI
+Each service has Swagger UI at:
+`http://localhost:<PORT>/swagger-ui.html`
+
+### 4. RabbitMQ Management
+>>>>>>> 88c5159d1d6c6c9986b072b09071f42a71155d35
 `http://localhost:15672` (guest/guest)
 
 ## Port Assignments
@@ -100,21 +108,15 @@ Each microservice follows the Controller-Service-Repository (CSR) pattern:
 
 ## Implementation Status
 
-### Student Service ✅ — Complete (Hashim)
-The Student Service is fully implemented and ready for Checkpoint 1. It covers all 6 endpoints required by Assignment 3:
+### Student Service
+The Student Service is fully implemented. It covers all 6 endpoints required by Assignment 3:
 register a student, get by ID, update profile, delete, update academic status, and validate.
 All endpoints are tested (5 unit tests with `@WebMvcTest`, no database needed), documented on Swagger UI at `http://localhost:8081/swagger-ui.html`, and verified end-to-end through manual testing.
 
 **How other services access student data:**
 No service is allowed to query `student_db` directly. Instead, they call the Student Service over HTTP.
-The main integration point is the validate endpoint — before a student can enrol in a course, sit an exam, or borrow a book, the responsible service calls `GET /students/validate/{studentId}`.
+The main integration point is the validate endpoint before a student can enrol in a course, sit an exam, or borrow a book, the responsible service calls `GET /students/validate/{studentId}`.
 It returns `valid: true` only if the student exists and their status is `ACTIVE`. If the student is suspended, graduated, or not found, the calling service gets a clear response and can reject the request with a meaningful error.
 For cases where the full profile is needed (name, email, program), services call `GET /students/{studentId}` instead.
-This pattern keeps each service independent — they share data through APIs, not shared databases.
+This pattern keeps each service independent they share data through APIs, not shared databases.
 
----
-
-## Checkpoints
-- **CP1 (May 5):** 1 microservice fully implemented per student (backend only)
-- **CP2 (May 12):** 2nd service + integration + basic frontend
-- **CP3 (May 19):** Full system + security + Docker + async messaging

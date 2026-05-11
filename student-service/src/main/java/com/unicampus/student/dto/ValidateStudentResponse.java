@@ -1,5 +1,6 @@
 package com.unicampus.student.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.unicampus.student.domain.AcademicStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -37,6 +38,7 @@ public class ValidateStudentResponse {
 
     private UUID studentId;
 
+    @JsonProperty("isValid")
     @Schema(description = "True if student status is ACTIVE")
     private boolean isValid;
 
