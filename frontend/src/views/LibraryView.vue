@@ -11,6 +11,30 @@
     </div>
 
     <div v-else class="books-section">
+      <div v-if="studentId" class="my-loans-section">
+        <h2>My Borrowed Books</h2>
+        <div v-if="activeLoans.length === 0" class="no-books">
+          <p>You haven't borrowed any books.</p>
+        </div>
+        <div v-else class="books-list">
+          <div v-for="loan in activeLoans" :key="loan.loanId" class="book-card my-loan-card">
+            <div class="book-header">
+              <h3>{{ loan.bookTitle }}</h3>
+              <span class="book-author">Loan ID: {{ loan.loanId }}</span>
+            </div>
+            <div class="book-details">
+              <p><strong>Due Date:</strong> {{ loan.dueDate }}</p>
+            </div>
+            <div class="book-actions">
+              <button class="btn btn-warning" @click="returnBook(loan.loanId)">
+                Return Book
+              </button>
+            </div>
+          </div>
+        </div>
+        <hr class="section-divider" />
+      </div>
+
       <h2>Available Books</h2>
 
       <div v-if="books.length === 0" class="no-books">
@@ -49,14 +73,42 @@ export default {
   data() {
     return {
       books: [],
+      activeLoans: [],
+      studentId: localStorage.getItem('studentId') || '',
       loading: true,
       error: null,
     }
   },
   mounted() {
     this.fetchBooks();
+    
+    // Listen for storage events in case login happens in App.vue in another tab
+    window.addEventListener('storage', this.handleStorageChange);
+    
+    // Also periodically check localStorage in case it changed in the same tab (since App.vue login doesn't emit global event)
+    this.storageInterval = setInterval(this.checkStorage, 1000);
+  },
+  beforeUnmount() {
+    window.removeEventListener('storage', this.handleStorageChange);
+    if (this.storageInterval) clearInterval(this.storageInterval);
   },
   methods: {
+    handleStorageChange(e) {
+      if (e.key === 'studentId') {
+        this.checkStorage();
+      }
+    },
+    checkStorage() {
+      const currentStudentId = localStorage.getItem('studentId') || '';
+      if (this.studentId !== currentStudentId) {
+        this.studentId = currentStudentId;
+        if (this.studentId) {
+          this.fetchStudentLoans();
+        } else {
+          this.activeLoans = [];
+        }
+      }
+    },
     isValidUUID(value) {
       return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     },
@@ -74,7 +126,10 @@ export default {
         
         const data = await response.json();
         this.books = data;
-        console.log('Books loaded:', this.books);
+        
+        if (this.studentId) {
+          await this.fetchStudentLoans();
+        }
       } catch (error) {
         this.error = error.message || 'Failed to load books';
         console.error('Error fetching books:', error);
@@ -82,22 +137,39 @@ export default {
         this.loading = false;
       }
     },
+
+    async fetchStudentLoans() {
+      if (!this.studentId) return;
+      try {
+        const response = await fetch(`/api/library/loans/student/${this.studentId}`);
+        if (response.ok) {
+          const loans = await response.json();
+          // Filter only active loans (not returned yet)
+          this.activeLoans = loans.filter(loan => !loan.returnedAt);
+        }
+      } catch (error) {
+        console.error('Error fetching student loans:', error);
+      }
+    },
     
     async borrowBook(bookId) {
-      // Since we don't have login, we'll prompt for a UUID
-      const studentIdInput = prompt("Please enter your Student ID (UUID) to borrow this book:");
+      // Check if studentId is in localStorage
+      let studentId = localStorage.getItem('studentId');
       
-      if (studentIdInput === null) return;
-
-      const studentId = studentIdInput.trim();
-
       if (!studentId) {
-        alert('Please enter a student ID.');
-        return;
+        // If not, prompt for it
+        const studentIdInput = prompt("Please enter your Student ID (UUID) to borrow this book:");
+        if (studentIdInput === null) return;
+        studentId = studentIdInput.trim();
+        
+        if (!studentId) {
+          alert('Please enter a student ID.');
+          return;
+        }
       }
 
       if (!this.isValidUUID(studentId)) {
-        alert('Please enter a valid student ID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).');
+        alert('Please provide a valid student ID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx). Please login with a valid UUID first, or enter it when prompted.');
         return;
       }
 
@@ -122,11 +194,39 @@ export default {
         }
         
         alert('Book borrowed successfully!');
-        // Refresh the list to show updated availability
+        // Refresh the lists
         this.fetchBooks();
       } catch (error) {
         alert('Failed to borrow book: ' + error.message);
         console.error('Error borrowing book:', error);
+      }
+    },
+
+    async returnBook(loanId) {
+      if (!confirm('Are you sure you want to return this book?')) return;
+
+      try {
+        const response = await fetch(`/api/library/loans/${loanId}/return`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          let errorMsg = `HTTP error! status: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            if (errorData.message) errorMsg = errorData.message;
+          } catch(e) {}
+          throw new Error(errorMsg);
+        }
+        
+        alert('Book returned successfully!');
+        this.fetchBooks(); // refresh books and loans
+      } catch (error) {
+        alert('Failed to return book: ' + error.message);
+        console.error('Error returning book:', error);
       }
     }
   }
@@ -256,6 +356,15 @@ h2 {
   background-color: #218838;
 }
 
+.btn-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+}
+
 .btn-disabled {
   background-color: #e9ecef;
   color: #6c757d;
@@ -267,5 +376,19 @@ h2 {
   padding: 40px;
   color: #999;
   font-style: italic;
+}
+
+.my-loans-section {
+  margin-bottom: 40px;
+}
+
+.my-loan-card {
+  border-left: 4px solid #ffc107;
+}
+
+.section-divider {
+  margin-top: 40px;
+  border: 0;
+  border-top: 1px solid #eee;
 }
 </style>
