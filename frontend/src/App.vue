@@ -5,6 +5,7 @@
       <nav class="main-nav" v-if="$route.path !== '/admin'">
         <router-link to="/">Courses</router-link>
         <router-link to="/library">Library</router-link>
+        <router-link to="/dormitory">Dormitory</router-link>
       </nav>
       <div class="login-section" v-if="$route.path !== '/admin'">
         <div v-if="studentId" class="user-info">

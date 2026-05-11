@@ -28,7 +28,41 @@
           {{ errorMessage }}
         </div>
       </form>
+    <div class="admin-section">
+      <h2>Dormitory Management - Add Room</h2>
+      <form @submit.prevent="addRoom" class="admin-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="roomNumber">Room Number</label>
+            <input type="text" id="roomNumber" v-model="newRoom.roomNumber" required placeholder="e.g. 101" />
+          </div>
+          <div class="form-group">
+            <label for="roomType">Type</label>
+            <select id="roomType" v-model="newRoom.type" required>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Suite">Suite</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="capacity">Capacity</label>
+            <input type="number" id="capacity" v-model="newRoom.capacity" required min="1" />
+          </div>
+          <div class="form-group">
+            <label for="price">Price / Semester</label>
+            <input type="number" id="price" v-model="newRoom.pricePerSemester" required min="0" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-dormitory" :disabled="isSubmittingDorm">
+          {{ isSubmittingDorm ? 'Adding...' : 'Add Room' }}
+        </button>
+        <div v-if="dormSuccess" class="success-msg">{{ dormSuccess }}</div>
+        <div v-if="dormError" class="error-msg">{{ dormError }}</div>
+      </form>
     </div>
+  </div>
   </main>
 </template>
 
@@ -42,7 +76,18 @@ export default {
       },
       isSubmitting: false,
       successMessage: '',
-      errorMessage: ''
+      errorMessage: '',
+      newRoom: {
+        roomNumber: '',
+        type: 'Single',
+        capacity: 1,
+        pricePerSemester: 0,
+        isAvailable: true,
+        currentOccupancy: 0
+      },
+      isSubmittingDorm: false,
+      dormSuccess: '',
+      dormError: ''
     }
   },
   methods: {
@@ -77,6 +122,40 @@ export default {
         console.error('Error adding book:', error);
       } finally {
         this.isSubmitting = false;
+      }
+    },
+    async addRoom() {
+      this.isSubmittingDorm = true;
+      this.dormSuccess = '';
+      this.dormError = '';
+      
+      try {
+        const response = await fetch('/api/dormitory/rooms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(this.newRoom)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const addedRoom = await response.json();
+        this.dormSuccess = `Successfully added Room ${addedRoom.roomNumber}`;
+        this.newRoom = {
+          roomNumber: '',
+          type: 'Single',
+          capacity: 1,
+          pricePerSemester: 0,
+          isAvailable: true,
+          currentOccupancy: 0
+        };
+      } catch (error) {
+        this.dormError = 'Failed to add room: ' + error.message;
+      } finally {
+        this.isSubmittingDorm = false;
       }
     }
   }
@@ -178,5 +257,32 @@ input:focus {
   color: #721c24;
   border: 1px solid #f5c6cb;
   border-radius: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.btn-dormitory {
+  background-color: #6c5ce7;
+  color: white;
+}
+
+.btn-dormitory:hover:not(:disabled) {
+  background-color: #5b4bc4;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
 }
 </style>
