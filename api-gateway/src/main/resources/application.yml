@@ -113,7 +113,6 @@ spring:
           predicates:
             - Path=/api/dormitory/**
           filters:
-            - StripPrefix=1
             - name: CircuitBreaker
               args:
                 name: dormitoryServiceCB

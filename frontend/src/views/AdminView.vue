@@ -37,12 +37,8 @@
             <input type="text" id="roomNumber" v-model="newRoom.roomNumber" required placeholder="e.g. 101" />
           </div>
           <div class="form-group">
-            <label for="roomType">Type</label>
-            <select id="roomType" v-model="newRoom.type" required>
-              <option value="Single">Single</option>
-              <option value="Double">Double</option>
-              <option value="Suite">Suite</option>
-            </select>
+            <label for="building">Building</label>
+            <input type="text" id="building" v-model="newRoom.building" required placeholder="e.g. North Hall" />
           </div>
         </div>
         <div class="form-row">
@@ -51,8 +47,8 @@
             <input type="number" id="capacity" v-model="newRoom.capacity" required min="1" />
           </div>
           <div class="form-group">
-            <label for="price">Price / Semester</label>
-            <input type="number" id="price" v-model="newRoom.pricePerSemester" required min="0" />
+            <label for="amenities">Amenities (comma separated)</label>
+            <input type="text" id="amenities" v-model="amenitiesInput" placeholder="e.g. Wi-Fi, AC" />
           </div>
         </div>
         <button type="submit" class="btn btn-dormitory" :disabled="isSubmittingDorm">
@@ -61,6 +57,38 @@
         <div v-if="dormSuccess" class="success-msg">{{ dormSuccess }}</div>
         <div v-if="dormError" class="error-msg">{{ dormError }}</div>
       </form>
+    </div>
+
+    <div class="admin-section rooms-list-section">
+      <h2>All Rooms</h2>
+      <button @click="fetchRooms" class="btn btn-primary" style="margin-bottom: 15px;">Refresh Rooms</button>
+      <table v-if="rooms.length > 0" class="rooms-table">
+        <thead>
+          <tr>
+            <th>Room Number</th>
+            <th>Building</th>
+            <th>Capacity</th>
+            <th>Occupancy</th>
+            <th>Amenities</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="room in rooms" :key="room.roomId">
+            <td>{{ room.roomNumber }}</td>
+            <td>{{ room.building }}</td>
+            <td>{{ room.capacity }}</td>
+            <td>{{ room.currentOccupancy }} / {{ room.capacity }}</td>
+            <td>{{ room.amenities ? room.amenities.join(', ') : '' }}</td>
+            <td>
+              <span :class="room.isAvailable && room.currentOccupancy < room.capacity ? 'status-available' : 'status-full'">
+                {{ room.isAvailable && room.currentOccupancy < room.capacity ? 'Available' : 'Full' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-else>No rooms found. Add a room above to get started.</p>
     </div>
   </div>
   </main>
@@ -79,16 +107,18 @@ export default {
       errorMessage: '',
       newRoom: {
         roomNumber: '',
-        type: 'Single',
-        capacity: 1,
-        pricePerSemester: 0,
-        isAvailable: true,
-        currentOccupancy: 0
+        building: '',
+        capacity: 1
       },
+      amenitiesInput: '',
       isSubmittingDorm: false,
       dormSuccess: '',
-      dormError: ''
+      dormError: '',
+      rooms: []
     }
+  },
+  mounted() {
+    this.fetchRooms();
   },
   methods: {
     async addBook() {
@@ -129,13 +159,18 @@ export default {
       this.dormSuccess = '';
       this.dormError = '';
       
+      const payload = {
+        ...this.newRoom,
+        amenities: this.amenitiesInput.split(',').map(a => a.trim()).filter(a => a)
+      };
+
       try {
         const response = await fetch('/api/dormitory/rooms', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(this.newRoom)
+          body: JSON.stringify(payload)
         });
         
         if (!response.ok) {
@@ -143,19 +178,28 @@ export default {
         }
         
         const addedRoom = await response.json();
-        this.dormSuccess = `Successfully added Room ${addedRoom.roomNumber}`;
+        this.dormSuccess = `Successfully added Room ${addedRoom.roomNumber} in ${addedRoom.building}`;
         this.newRoom = {
           roomNumber: '',
-          type: 'Single',
-          capacity: 1,
-          pricePerSemester: 0,
-          isAvailable: true,
-          currentOccupancy: 0
+          building: '',
+          capacity: 1
         };
+        this.amenitiesInput = '';
+        this.fetchRooms();
       } catch (error) {
         this.dormError = 'Failed to add room: ' + error.message;
       } finally {
         this.isSubmittingDorm = false;
+      }
+    },
+    async fetchRooms() {
+      try {
+        const response = await fetch('/api/dormitory/rooms');
+        if (response.ok) {
+          this.rooms = await response.json();
+        }
+      } catch (error) {
+        console.error('Failed to fetch rooms:', error);
       }
     }
   }
@@ -180,6 +224,7 @@ h1 {
 .admin-section {
   background-color: white;
   padding: 30px;
+  margin-top: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   border: 1px solid #eaeaea;
@@ -284,5 +329,38 @@ select {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
+}
+
+.rooms-list-section {
+  margin-top: 30px;
+}
+
+.rooms-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.rooms-table th,
+.rooms-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.rooms-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+}
+
+.status-available {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status-full {
+  color: #dc3545;
+  font-weight: bold;
 }
 </style>
