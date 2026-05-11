@@ -28,14 +28,14 @@ public class RequestLoggingFilter implements GlobalFilter, Ordered {
                 : "unknown";
         Instant start = Instant.now();
 
-        log.info(">>> Gateway request: {} {} from {}", method, path, remoteAddr);
+        log.debug(">>> Gateway request: {} {} from {}", method, path, remoteAddr);
 
         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
             long durationMs = java.time.Duration.between(start, Instant.now()).toMillis();
             int status = exchange.getResponse().getStatusCode() != null
                     ? exchange.getResponse().getStatusCode().value()
                     : 0;
-            log.info("<<< Gateway response: {} {} -> {} ({}ms)", method, path, status, durationMs);
+            log.debug("<<< Gateway response: {} {} -> {} ({}ms)", method, path, status, durationMs);
         }));
     }
 

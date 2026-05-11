@@ -3,11 +3,13 @@ package com.unicampus.student;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.TimeZone;
+
 @SpringBootApplication
 public class StudentServiceApplication {
 
     public static void main(String[] args) {
-        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("UTC"));
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(StudentServiceApplication.class, args);
     }
 }
