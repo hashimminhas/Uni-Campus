@@ -177,5 +177,5 @@ resilience4j:
 # ── Logging ──────────────────────────────────────────────────────
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty.http.client: DEBUG
+    org.springframework.cloud.gateway: INFO
+    reactor.netty.http.client: WARN
