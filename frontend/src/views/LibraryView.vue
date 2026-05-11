@@ -57,7 +57,7 @@ export default {
     this.fetchBooks();
   },
   methods: {
-    isValidUuid(value) {
+    isValidUUID(value) {
       return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     },
 
@@ -96,7 +96,7 @@ export default {
         return;
       }
 
-      if (!this.isValidUuid(studentId)) {
+      if (!this.isValidUUID(studentId)) {
         alert('Please enter a valid student ID in UUID format.');
         return;
       }
