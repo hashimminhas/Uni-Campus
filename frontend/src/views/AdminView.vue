@@ -224,7 +224,7 @@ h1 {
 .admin-section {
   background-color: white;
   padding: 30px;
-  margin-top: 1rem;
+  margin-top: 1.1rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   border: 1px solid #eaeaea;
