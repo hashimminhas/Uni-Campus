@@ -57,6 +57,10 @@ export default {
     this.fetchBooks();
   },
   methods: {
+    isValidUuid(value) {
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+    },
+
     async fetchBooks() {
       try {
         this.loading = true;
@@ -81,9 +85,21 @@ export default {
     
     async borrowBook(bookId) {
       // Since we don't have login, we'll prompt for a UUID
-      const studentId = prompt("Please enter your Student ID (UUID) to borrow this book:");
+      const studentIdInput = prompt("Please enter your Student ID (UUID) to borrow this book:");
       
-      if (!studentId) return; // User cancelled
+      if (studentIdInput === null) return;
+
+      const studentId = studentIdInput.trim();
+
+      if (!studentId) {
+        alert('Please enter a student ID.');
+        return;
+      }
+
+      if (!this.isValidUuid(studentId)) {
+        alert('Please enter a valid student ID in UUID format.');
+        return;
+      }
 
       try {
         const response = await fetch(`/api/library/books/${bookId}/borrow`, {
