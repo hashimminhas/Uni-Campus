@@ -6,6 +6,7 @@
         <router-link to="/">Courses</router-link>
         <router-link to="/library">Library</router-link>
         <router-link to="/dormitory">Dormitory</router-link>
+        <router-link to="/meal-plan">Meal Plans</router-link>
       </nav>
       <div class="login-section" v-if="$route.path !== '/admin'">
         <div v-if="studentId" class="user-info">

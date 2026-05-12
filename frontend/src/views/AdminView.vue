@@ -28,6 +28,8 @@
           {{ errorMessage }}
         </div>
       </form>
+    </div>
+
     <div class="admin-section">
       <h2>Dormitory Management - Add Room</h2>
       <form @submit.prevent="addRoom" class="admin-form">
@@ -90,7 +92,75 @@
       </table>
       <p v-else>No rooms found. Add a room above to get started.</p>
     </div>
-  </div>
+
+    <div class="admin-section">
+      <h2>Meal Plan Management - Create Plan</h2>
+      <form @submit.prevent="createMealPlan" class="admin-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="planName">Plan Name</label>
+            <input type="text" id="planName" v-model="newMealPlan.name" required placeholder="e.g. Standard Plan" />
+          </div>
+          <div class="form-group">
+            <label for="mealsPerWeek">Meals per Week</label>
+            <input type="number" id="mealsPerWeek" v-model="newMealPlan.mealsPerWeek" required min="1" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="mealPrice">Price</label>
+            <input type="number" id="mealPrice" v-model="newMealPlan.price" required min="0" />
+          </div>
+          <div class="form-group">
+            <label for="mealSemester">Semester</label>
+            <input type="text" id="mealSemester" v-model="newMealPlan.semester" required placeholder="e.g. Fall 2026" />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-meal" :disabled="isSubmittingMeal">
+          {{ isSubmittingMeal ? 'Creating...' : 'Create Meal Plan' }}
+        </button>
+        <div v-if="mealSuccess" class="success-msg">{{ mealSuccess }}</div>
+        <div v-if="mealError" class="error-msg">{{ mealError }}</div>
+      </form>
+    </div>
+
+    <div class="admin-section">
+      <h2>Meal Plan Popularity</h2>
+      <button @click="fetchMealPlans" class="btn btn-primary" style="margin-bottom: 15px;">Refresh Stats</button>
+      <table v-if="mealPlans.length > 0" class="rooms-table">
+        <thead>
+          <tr>
+            <th>Plan Name</th>
+            <th>Meals/Week</th>
+            <th>Price</th>
+            <th>Semester</th>
+            <th>Status</th>
+            <th>Current Subscriptions</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="plan in mealPlans" :key="plan.planId">
+            <td>{{ plan.name }}</td>
+            <td>{{ plan.mealsPerWeek }}</td>
+            <td>${{ plan.price }}</td>
+            <td>{{ plan.semester }}</td>
+            <td>
+              <span :class="plan.isActive ? 'status-available' : 'status-full'">
+                {{ plan.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td><strong>{{ plan.popularity }}</strong> active students</td>
+            <td>
+              <button @click="togglePlanStatus(plan.planId)" class="btn btn-primary">
+                {{ plan.isActive ? 'Deactivate' : 'Activate' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-else>No meal plans found.</p>
+    </div>
   </main>
 </template>
 
@@ -114,11 +184,22 @@ export default {
       isSubmittingDorm: false,
       dormSuccess: '',
       dormError: '',
-      rooms: []
+      rooms: [],
+      newMealPlan: {
+        name: '',
+        mealsPerWeek: 14,
+        price: 0,
+        semester: ''
+      },
+      mealPlans: [],
+      isSubmittingMeal: false,
+      mealSuccess: '',
+      mealError: ''
     }
   },
   mounted() {
     this.fetchRooms();
+    this.fetchMealPlans();
   },
   methods: {
     async addBook() {
@@ -200,6 +281,60 @@ export default {
         }
       } catch (error) {
         console.error('Failed to fetch rooms:', error);
+      }
+    },
+    async createMealPlan() {
+      this.isSubmittingMeal = true;
+      this.mealSuccess = '';
+      this.mealError = '';
+      try {
+        const response = await fetch('/api/meal-plan/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.newMealPlan)
+        });
+        if (response.ok) {
+          const created = await response.json();
+          this.mealSuccess = `Successfully created ${created.name}`;
+          this.newMealPlan = { name: '', mealsPerWeek: 14, price: 0, semester: '' };
+          this.fetchMealPlans();
+        } else {
+          throw new Error('Failed to create plan');
+        }
+      } catch (error) {
+        this.mealError = error.message;
+      } finally {
+        this.isSubmittingMeal = false;
+      }
+    },
+    async fetchMealPlans() {
+      try {
+        const response = await fetch('/api/meal-plan/plans');
+        if (response.ok) {
+          const plans = await response.json();
+          const plansWithPop = await Promise.all(plans.map(async (plan) => {
+            const popRes = await fetch(`/api/meal-plan/plans/${plan.planId}/popularity`);
+            const popularity = popRes.ok ? await popRes.json() : 0;
+            return { ...plan, popularity };
+          }));
+          this.mealPlans = plansWithPop;
+        }
+      } catch (error) {
+        console.error('Failed to fetch meal plans:', error);
+      }
+    },
+    async togglePlanStatus(planId) {
+      try {
+        const response = await fetch(`/api/meal-plan/plans/${planId}/toggle`, {
+          method: 'PATCH'
+        });
+        if (response.ok) {
+          this.fetchMealPlans();
+        } else {
+          console.error('Failed to toggle status');
+        }
+      } catch (error) {
+        console.error('Error toggling status:', error);
       }
     }
   }
@@ -362,5 +497,18 @@ select {
 .status-full {
   color: #dc3545;
   font-weight: bold;
+}
+
+.btn-meal {
+  background-color: #ff7675;
+  color: white;
+}
+
+.btn-meal:hover:not(:disabled) {
+  background-color: #e17055;
+}
+
+.admin-form {
+  margin-top: 15px;
 }
 </style>

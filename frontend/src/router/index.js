@@ -25,6 +25,11 @@ const routes = [
     name: 'dormitory',
     component: DormitoryView,
   },
+  {
+    path: '/meal-plan',
+    name: 'meal-plan',
+    component: () => import('../views/MealPlanView.vue'),
+  },
 ]
 
 const router = createRouter({
