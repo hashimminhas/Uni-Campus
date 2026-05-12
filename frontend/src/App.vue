@@ -4,6 +4,7 @@
       <div class="logo">UniCampus</div>
       <nav class="main-nav" v-if="$route.path !== '/admin'">
         <router-link to="/">Courses</router-link>
+        <router-link to="/students">Students</router-link>
         <router-link to="/library">Library</router-link>
       </nav>
       <div class="login-section" v-if="$route.path !== '/admin'">
