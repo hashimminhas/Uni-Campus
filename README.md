@@ -23,29 +23,51 @@
 
 ## How to Run
 
-### 1. Start Infrastructure
+### 1. Start Everything (Backend)
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
-This starts PostgreSQL (with all 8 databases) and RabbitMQ.
+This starts **all services** — PostgreSQL, RabbitMQ, API Gateway, and all 8 microservices. No `mvn spring-boot:run` needed.
 
-### 2. Run Your Service
-Open your service folder in IntelliJ or VS Code, then:
+To rebuild a specific service after code changes:
 ```bash
-cd <your-service>/
-mvn spring-boot:run
+docker compose up -d --build <service-name>
+# e.g. docker compose up -d --build student-service
 ```
+
+To stop everything:
+```bash
+docker compose down
+```
+
+### 2. Start the Frontend
+```bash
+cd frontend
+npm install       # first time only
+npm run dev
+```
+Open `http://localhost:5173` in your browser.
 
 ### 3. Access Swagger UI
-Each service has Swagger UI at:
-`http://localhost:<PORT>/swagger-ui.html`
+Each service exposes Swagger UI directly:
+| Service              | Swagger URL                              |
+|----------------------|------------------------------------------|
+| Student Service      | http://localhost:8081/swagger-ui.html    |
+| Notification Service | http://localhost:8082/swagger-ui.html    |
+| Course Service       | http://localhost:8083/swagger-ui.html    |
+| Exam Service         | http://localhost:8084/swagger-ui.html    |
+| Library Service      | http://localhost:8085/swagger-ui.html    |
+| Billing Service      | http://localhost:8086/swagger-ui.html    |
+| Dormitory Service    | http://localhost:8087/swagger-ui.html    |
+| Meal Plan Service    | http://localhost:8088/swagger-ui.html    |
 
 ### 4. RabbitMQ Management
-`http://localhost:15672` (guest/guest)
+`http://localhost:15672` — login: `guest / guest`
 
 ## Port Assignments
 | Service              | Port  |
 |----------------------|-------|
+| API Gateway          | 8080  |
 | Student Service      | 8081  |
 | Notification Service | 8082  |
 | Course Service       | 8083  |
@@ -54,7 +76,7 @@ Each service has Swagger UI at:
 | Billing Service      | 8086  |
 | Dormitory Service    | 8087  |
 | Meal Plan Service    | 8088  |
-| PostgreSQL           | 5432  |
+| PostgreSQL           | 5433  |
 | RabbitMQ             | 5672  |
 | RabbitMQ Management  | 15672 |
 | Frontend (Dev)       | 5173  |
