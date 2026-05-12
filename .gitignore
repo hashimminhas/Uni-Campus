@@ -32,11 +32,7 @@ Thumbs.db
 logs/
 
 # Environment
-<<<<<<< HEAD
-
-=======
 # .env
->>>>>>> 90a899274f252ead0c8ed43ebd487103c28a3074
 
 # Docker volumes
 postgres_data/

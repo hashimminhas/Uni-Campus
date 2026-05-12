@@ -36,7 +36,6 @@ cd <your-service>/
 mvn spring-boot:run
 ```
 
-<<<<<<< HEAD
 ### 3. Run Service Tests
 Each backend service can run its tests without starting PostgreSQL because tests use an in-memory H2 database:
 ```bash
@@ -64,13 +63,6 @@ Each service has Swagger UI at:
 `http://localhost:<PORT>/swagger-ui.html`
 
 ### 6. RabbitMQ Management
-=======
-### 3. Access Swagger UI
-Each service has Swagger UI at:
-`http://localhost:<PORT>/swagger-ui.html`
-
-### 4. RabbitMQ Management
->>>>>>> 88c5159d1d6c6c9986b072b09071f42a71155d35
 `http://localhost:15672` (guest/guest)
 
 ## Port Assignments
