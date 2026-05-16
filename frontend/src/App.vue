@@ -83,6 +83,7 @@ export default {
     return {
       studentId: localStorage.getItem('studentId') || '',
       studentName: localStorage.getItem('studentName') || '',
+      token: localStorage.getItem('token') || '',
       loginInput: '',
       notifications: [],
       dropdownOpen: false,
@@ -108,24 +109,34 @@ export default {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
       if (!uuidRegex.test(inputId)) { alert('Please enter a valid UUID.'); return }
       try {
-        const res = await fetch(`/api/students/${inputId}`)
+        const res = await fetch('/api/students/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentId: inputId })
+        })
         if (!res.ok) throw new Error('Student not found')
         const data = await res.json()
-        this.studentId = inputId
+        this.studentId = data.studentId
         this.studentName = `${data.firstName} ${data.lastName}`
-        localStorage.setItem('studentId', inputId)
+        this.token = data.token
+        localStorage.setItem('studentId', data.studentId)
         localStorage.setItem('studentName', this.studentName)
+        localStorage.setItem('token', data.token)
         this.loginInput = ''
         await this.fetchNotifications()
       } catch (e) { alert('Login failed: ' + e.message) }
     },
     logout() {
-      this.studentId = ''; this.studentName = ''; this.notifications = []; this.dropdownOpen = false
+      this.studentId = ''; this.studentName = ''; this.token = ''
+      this.notifications = []; this.dropdownOpen = false
       localStorage.removeItem('studentId'); localStorage.removeItem('studentName')
+      localStorage.removeItem('token')
     },
     async fetchNotifications() {
       try {
-        const res = await fetch(`/api/notifications/student/${this.studentId}`)
+        const res = await fetch(`/api/notifications/student/${this.studentId}`, {
+          headers: { 'Authorization': `Bearer ${this.token}` }
+        })
         if (res.ok) this.notifications = await res.json()
       } catch (e) {}
     },

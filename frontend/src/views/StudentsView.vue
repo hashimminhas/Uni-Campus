@@ -193,8 +193,11 @@ export default {
       this.allStudents.loading = true
       this.page = 0
       try {
-        const res = await fetch('/api/students')
-        this.allStudents.list = await res.json()
+        const token = localStorage.getItem('token') || ''
+        const res = await fetch('/api/students', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        })
+        this.allStudents.list = res.ok ? await res.json() : []
       } catch (e) {
         this.allStudents.list = []
       } finally { this.allStudents.loading = false }
