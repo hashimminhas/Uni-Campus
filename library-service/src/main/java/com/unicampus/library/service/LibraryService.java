@@ -1,5 +1,6 @@
 package com.unicampus.library.service;
 
+import com.unicampus.library.config.RabbitMQConfig;
 import com.unicampus.library.domain.Book;
 import com.unicampus.library.domain.BookLoan;
 import com.unicampus.library.dto.*;
@@ -7,6 +8,7 @@ import com.unicampus.library.exception.*;
 import com.unicampus.library.repository.BookLoanRepository;
 import com.unicampus.library.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class LibraryService {
     private final BookRepository bookRepository;
     private final BookLoanRepository bookLoanRepository;
     private final WebClient studentWebClient;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional
     public BookResponse addBook(AddBookRequest request) {
@@ -77,6 +80,12 @@ public class LibraryService {
                 .studentId(request.getStudentId())
                 .build();
         loan = bookLoanRepository.save(loan);
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.LIBRARY_EVENTS_EXCHANGE,
+                RabbitMQConfig.BOOK_BORROWED_KEY,
+                new BookBorrowedEvent(request.getStudentId(), book.getTitle(), loan.getDueDate().toString())
+        );
 
         return mapToLoanResponse(loan);
     }

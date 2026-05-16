@@ -112,3 +112,110 @@ It returns `valid: true` only if the student exists and their status is `ACTIVE`
 For cases where the full profile is needed (name, email, program), services call `GET /students/{studentId}` instead.
 This pattern keeps each service independent they share data through APIs, not shared databases.
 
+---
+
+## How to Send Notifications from Your Service (RabbitMQ)
+
+The Notification Service listens on RabbitMQ queues automatically. When something happens in your service (enroll, borrow, pay, etc.), publish a message to the right exchange and the student will see it in the bell dropdown on the frontend. **You do not call the Notification Service directly.**
+
+### Step 1 — Add dependency to your `pom.xml` (if not already there)
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-amqp</artifactId>
+</dependency>
+```
+
+### Step 2 — Add JSON converter + RabbitTemplate to your `RabbitMQConfig.java`
+```java
+@Bean
+public MessageConverter jsonMessageConverter() {
+    return new Jackson2JsonMessageConverter();
+}
+
+@Bean
+public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+    RabbitTemplate template = new RabbitTemplate(connectionFactory);
+    template.setMessageConverter(jsonMessageConverter());
+    return template;
+}
+```
+
+### Step 3 — Inject RabbitTemplate into your service class
+```java
+private final RabbitTemplate rabbitTemplate;
+```
+
+### Step 4 — Publish the event inside your method
+
+Use the exact exchange name, routing key, and JSON fields shown below for your service.
+
+---
+
+### Sudais — Course Service
+Publish when a student **enrolls** in a course:
+```java
+rabbitTemplate.convertAndSend(
+    "course.events",
+    "enrollment.confirmed",
+    Map.of(
+        "studentId", studentId,         // UUID
+        "courseCode", "CS301",          // String
+        "courseName", "Algorithms",     // String
+        "action", "ENROLLED"            // String — use "DROPPED" when dropping
+    )
+);
+```
+Publish when a student **drops** a course — same code but `"action", "DROPPED"`.
+
+### Sudais — Exam Service
+Publish when an exam is **scheduled** for a student:
+```java
+rabbitTemplate.convertAndSend(
+    "exam.events",
+    "exam.scheduled",
+    Map.of(
+        "studentId",  studentId,        // UUID
+        "courseCode", "CS301",          // String
+        "courseName", "Algorithms",     // String
+        "examDate",   "2026-06-05",     // String
+        "roomNumber", "A2"              // String
+    )
+);
+```
+
+### Daboikiabo — Dormitory & Billing
+These queues are not wired yet. Message Hashim and he will add the bindings in 5 minutes. Then publish like this:
+
+**Dormitory** — when a room is assigned:
+```java
+rabbitTemplate.convertAndSend(
+    "dormitory.events",
+    "room.assigned",
+    Map.of(
+        "studentId",  studentId,        // UUID
+        "roomNumber", "B204",           // String
+        "startDate",  "2026-09-01"      // String
+    )
+);
+```
+
+**Billing** — when an invoice is created:
+```java
+rabbitTemplate.convertAndSend(
+    "billing.events",
+    "invoice.created",
+    Map.of(
+        "studentId", studentId,         // UUID
+        "amount",    "500.00",          // String
+        "dueDate",   "2026-06-01"       // String
+    )
+);
+```
+
+### How to verify it works
+1. Run your service: `docker compose up -d --build <your-service-name>`
+2. Call your endpoint (e.g. enroll a student)
+3. Open `http://localhost:15672` → Queues — the message count will briefly spike then drop to 0 (consumed instantly)
+4. Log in to `http://localhost:5173` with that student's UUID → click the bell — notification appears
+
