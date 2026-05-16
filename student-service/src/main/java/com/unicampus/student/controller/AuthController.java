@@ -22,6 +22,18 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final StudentService studentService;
 
+    @Operation(summary = "Admin login — returns admin JWT token")
+    @PostMapping("/admin")
+    public ResponseEntity<?> adminLogin(@RequestBody Map<String, String> body) {
+        if ("admin".equals(body.get("username")) && "admin".equals(body.get("password"))) {
+            return ResponseEntity.ok(Map.of(
+                    "token", jwtUtil.generateAdminToken(),
+                    "role",  "ADMIN"
+            ));
+        }
+        return ResponseEntity.status(401).body(Map.of("error", "Invalid admin credentials"));
+    }
+
     @Operation(summary = "Login with student UUID — returns JWT token")
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {

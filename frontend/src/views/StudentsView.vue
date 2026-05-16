@@ -10,209 +10,266 @@
       </div>
     </div>
 
-    <!-- Title -->
     <div class="page-top">
       <h1 class="page-title">Student Registry</h1>
-      <p class="page-sub">Search individual records or browse the full list of registered students.</p>
+      <p class="page-sub">Register a new account or view your own profile.</p>
     </div>
 
     <div class="content">
 
-      <!-- Search -->
-      <div class="search-box">
-        <div class="search-label">FIND STUDENT BY UUID</div>
-        <div class="search-row">
-          <input v-model="find.studentId" placeholder="e.g. cb89da4a-9f7b-4c91-8914-e7f5020c1798" class="search-input" @keyup.enter="findStudent" />
-          <button @click="findStudent" class="search-btn" :disabled="find.loading">
-            <span v-if="!find.loading">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:-2px;margin-right:5px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search
-            </span>
-            <span v-else class="spinner"></span>
+      <!-- My Profile (only when logged in) -->
+      <div v-if="studentId" class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">{{ initials }}</div>
+          <div>
+            <div class="profile-name">{{ studentName }}</div>
+            <div class="profile-sub">Your profile</div>
+          </div>
+          <span class="badge" :class="profile ? badgeClass(profile.academicStatus) : ''" style="margin-left:auto">
+            <span class="badge-dot"></span>{{ profile ? formatStatus(profile.academicStatus) : '…' }}
+          </span>
+        </div>
+        <div v-if="profile" class="profile-grid">
+          <div class="pf">
+            <div class="pf-label">STUDENT ID</div>
+            <div class="pf-val mono" @click="copyId(profile.studentId)" title="Click to copy">
+              {{ profile.studentId }}
+              <span v-if="copied === profile.studentId" class="copy-badge">Copied!</span>
+            </div>
+          </div>
+          <div class="pf">
+            <div class="pf-label">EMAIL</div>
+            <div class="pf-val">{{ profile.email }}</div>
+          </div>
+          <div class="pf">
+            <div class="pf-label">PROGRAM</div>
+            <div class="pf-val">{{ profile.program }}</div>
+          </div>
+          <div class="pf">
+            <div class="pf-label">ENROLLMENT YEAR</div>
+            <div class="pf-val">{{ profile.enrollmentYear }}</div>
+          </div>
+          <div class="pf">
+            <div class="pf-label">PHONE</div>
+            <div class="pf-val">{{ profile.phoneNumber || '—' }}</div>
+          </div>
+        </div>
+        <div v-else class="profile-loading">Loading profile…</div>
+      </div>
+
+      <!-- Not logged in: prompt or registration form -->
+      <template v-else>
+
+        <!-- Prompt card -->
+        <div v-if="!showRegister" class="not-logged-in">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="not-logged-in-title">You are not logged in</div>
+          <div class="not-logged-in-sub">Log in with your student UUID from the top-right corner, or register a new account below.</div>
+          <button class="reg-trigger-btn" @click="showRegister = true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+            Register as New Student
           </button>
         </div>
-        <transition name="fade">
-          <div v-if="find.result" class="search-result" :class="find.isError ? 'search-result--error' : 'search-result--success'">
-            <template v-if="!find.isError">
-              <div class="sr-header">
-                <div class="avatar avatar--lg">{{ find.result.firstName[0] }}{{ find.result.lastName[0] }}</div>
-                <div>
-                  <div class="sr-name">{{ find.result.firstName }} {{ find.result.lastName }}</div>
-                  <div class="sr-email">{{ find.result.email }}</div>
-                </div>
-                <span class="badge" :class="badgeClass(find.result.academicStatus)" style="margin-left:auto">
-                  <span class="badge-dot"></span>{{ formatStatus(find.result.academicStatus) }}
-                </span>
-              </div>
-              <div class="sr-grid">
-                <div class="sr-field">
-                  <span class="sr-label">STUDENT ID</span>
-                  <span class="sr-val sr-val--mono" @click="copyId(find.result.studentId)" :title="copied === find.result.studentId ? 'Copied!' : 'Click to copy'" style="cursor:pointer">
-                    {{ find.result.studentId }}
-                    <span v-if="copied === find.result.studentId" class="copy-badge">Copied!</span>
-                  </span>
-                </div>
-                <div class="sr-field">
-                  <span class="sr-label">PROGRAM</span>
-                  <span class="sr-val">{{ find.result.program }}</span>
-                </div>
-                <div class="sr-field">
-                  <span class="sr-label">ENROLLMENT YEAR</span>
-                  <span class="sr-val">{{ find.result.enrollmentYear }}</span>
-                </div>
-                <div class="sr-field">
-                  <span class="sr-label">PHONE</span>
-                  <span class="sr-val">{{ find.result.phoneNumber || '—' }}</span>
-                </div>
-              </div>
-            </template>
-            <template v-else>
-              <div class="error-wrap">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>{{ find.result.message || 'Student not found.' }}</span>
-              </div>
-            </template>
-          </div>
-        </transition>
-      </div>
 
-      <!-- Table -->
-      <div class="table-card">
-        <div class="table-header">
-          <div>
-            <div class="table-title">Registered Students</div>
-            <div class="table-sub">{{ filteredStudents.length }} {{ activeFilter === 'ALL' ? 'total' : activeFilter.toLowerCase() }} records</div>
+        <!-- Registration form -->
+        <div v-else class="reg-card">
+          <div class="reg-header">
+            <div>
+              <div class="reg-title">New Student Registration</div>
+              <div class="reg-sub">Fill in your details to create an account</div>
+            </div>
+            <button class="back-btn" @click="cancelRegister">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
           </div>
-          <div class="header-right">
-            <!-- Filter chips -->
-            <div class="filter-chips">
-              <button v-for="f in filters" :key="f.value" class="chip" :class="{ 'chip--active': activeFilter === f.value }" @click="activeFilter = f.value; page = 0">
-                {{ f.label }}
+
+          <div class="reg-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">FIRST NAME <span class="req">*</span></label>
+                <input v-model="form.firstName" class="form-input" :class="{ 'form-input--err': errors.firstName }" placeholder="e.g. Alice" @input="errors.firstName = ''" />
+                <div v-if="errors.firstName" class="form-err">{{ errors.firstName }}</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">LAST NAME <span class="req">*</span></label>
+                <input v-model="form.lastName" class="form-input" :class="{ 'form-input--err': errors.lastName }" placeholder="e.g. Johnson" @input="errors.lastName = ''" />
+                <div v-if="errors.lastName" class="form-err">{{ errors.lastName }}</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">EMAIL ADDRESS <span class="req">*</span></label>
+              <input v-model="form.email" type="email" class="form-input" :class="{ 'form-input--err': errors.email }" placeholder="e.g. alice@university.edu" @input="errors.email = ''" />
+              <div v-if="errors.email" class="form-err">{{ errors.email }}</div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">PROGRAM <span class="req">*</span></label>
+                <input v-model="form.program" class="form-input" :class="{ 'form-input--err': errors.program }" placeholder="e.g. Computer Science" @input="errors.program = ''" />
+                <div v-if="errors.program" class="form-err">{{ errors.program }}</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">ENROLLMENT YEAR <span class="req">*</span></label>
+                <input v-model.number="form.enrollmentYear" type="number" class="form-input" :class="{ 'form-input--err': errors.enrollmentYear }" placeholder="e.g. 2024" min="2000" max="2099" @input="errors.enrollmentYear = ''" />
+                <div v-if="errors.enrollmentYear" class="form-err">{{ errors.enrollmentYear }}</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">PHONE NUMBER <span class="opt">(optional)</span></label>
+              <input v-model="form.phoneNumber" class="form-input" placeholder="e.g. +372 5123 4567" />
+            </div>
+
+            <div v-if="regError" class="reg-error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ regError }}
+            </div>
+
+            <div class="form-actions">
+              <button class="cancel-btn" @click="cancelRegister" :disabled="regLoading">Cancel</button>
+              <button class="submit-btn" @click="register" :disabled="regLoading">
+                <span v-if="regLoading" class="spinner"></span>
+                {{ regLoading ? 'Registering…' : 'Create Account' }}
               </button>
             </div>
-            <button @click="fetchAllStudents" class="refresh-btn" :class="{ 'refresh-btn--loading': allStudents.loading }" :title="'Refresh'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            </button>
           </div>
         </div>
 
-        <table class="table">
-          <thead>
-            <tr>
-              <th>STUDENT</th>
-              <th>UUID</th>
-              <th>PROGRAM · YEAR</th>
-              <th>STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="allStudents.loading">
-              <td colspan="4" class="table-empty">Loading...</td>
-            </tr>
-            <tr v-else-if="filteredStudents.length === 0">
-              <td colspan="4" class="table-empty">No students found</td>
-            </tr>
-            <tr v-for="s in pagedStudents" :key="s.studentId" class="table-row">
-              <td>
-                <div class="student-cell">
-                  <div class="avatar">{{ s.firstName[0] }}{{ s.lastName[0] }}</div>
-                  <div>
-                    <div class="cell-name">{{ s.firstName }} {{ s.lastName }}</div>
-                    <div class="cell-email">{{ s.email }}</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="cell-uuid" @click="copyId(s.studentId)" :title="copied === s.studentId ? 'Copied!' : 'Click to copy'">
-                  {{ s.studentId }}
-                  <span v-if="copied === s.studentId" class="copy-badge">Copied!</span>
-                </span>
-              </td>
-              <td class="cell-prog">{{ s.program }} · {{ s.enrollmentYear }}</td>
-              <td>
-                <span class="badge" :class="badgeClass(s.academicStatus)">
-                  <span class="badge-dot"></span>{{ formatStatus(s.academicStatus) }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="table-footer">
-          <span class="footer-count">Showing {{ pagedStudents.length }} of {{ filteredStudents.length }}</span>
-          <div class="pagination">
-            <button class="page-btn" :disabled="page === 0" @click="page--">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-              Previous
-            </button>
-            <button class="page-btn" :disabled="(page + 1) * pageSize >= filteredStudents.length" @click="page++">
-              Next
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-          </div>
-        </div>
-      </div>
+      </template>
 
     </div>
+
+    <!-- Success overlay -->
+    <div v-if="showSuccess" class="success-overlay">
+      <div class="success-card">
+        <div class="success-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="success-title">Account Created!</div>
+        <div class="success-sub">Welcome, {{ newStudentName }}. You are now logged in.</div>
+        <div class="success-id-label">Your Student ID (save this to log in again):</div>
+        <div class="success-id" @click="copyId(newStudentId)">
+          {{ newStudentId }}
+          <span v-if="copied === newStudentId" class="copy-badge">Copied!</span>
+        </div>
+        <button class="success-btn" @click="finishRegistration">Go to My Profile</button>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
 export default {
   name: 'StudentsView',
-  mounted() {
-    this.fetchAllStudents()
-  },
   data() {
     return {
-      allStudents: { list: [], loading: false },
-      find: { studentId: '', result: null, isError: false, loading: false },
-      page: 0,
-      pageSize: 8,
-      activeFilter: 'ALL',
+      studentId: localStorage.getItem('studentId') || '',
+      studentName: localStorage.getItem('studentName') || '',
+      profile: null,
       copied: null,
-      filters: [
-        { label: 'All', value: 'ALL' },
-        { label: 'Active', value: 'ACTIVE' },
-        { label: 'Graduated', value: 'GRADUATED' },
-        { label: 'On Leave', value: 'ON_LEAVE' },
-      ]
+      showRegister: false,
+      regLoading: false,
+      regError: '',
+      form: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        program: '',
+        enrollmentYear: '',
+        phoneNumber: ''
+      },
+      errors: {
+        firstName: '', lastName: '', email: '', program: '', enrollmentYear: ''
+      },
+      showSuccess: false,
+      newStudentId: '',
+      newStudentName: ''
     }
   },
   computed: {
-    filteredStudents() {
-      if (this.activeFilter === 'ALL') return this.allStudents.list
-      return this.allStudents.list.filter(s => s.academicStatus === this.activeFilter)
-    },
-    pagedStudents() {
-      const start = this.page * this.pageSize
-      return this.filteredStudents.slice(start, start + this.pageSize)
+    initials() {
+      if (!this.studentName) return '?'
+      return this.studentName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
     }
   },
+  mounted() {
+    if (this.studentId) this.fetchProfile()
+  },
   methods: {
-    async fetchAllStudents() {
-      this.allStudents.loading = true
-      this.page = 0
+    async fetchProfile() {
       try {
-        const token = localStorage.getItem('token') || ''
-        const res = await fetch('/api/students', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        })
-        this.allStudents.list = res.ok ? await res.json() : []
-      } catch (e) {
-        this.allStudents.list = []
-      } finally { this.allStudents.loading = false }
+        const res = await fetch(`/api/students/${this.studentId}`)
+        if (res.ok) this.profile = await res.json()
+      } catch (e) {}
     },
-    async findStudent() {
-      if (!this.find.studentId.trim()) return
-      this.find.result = null; this.find.loading = true
+    cancelRegister() {
+      this.showRegister = false
+      this.regError = ''
+      this.errors = { firstName: '', lastName: '', email: '', program: '', enrollmentYear: '' }
+      this.form = { firstName: '', lastName: '', email: '', program: '', enrollmentYear: '', phoneNumber: '' }
+    },
+    validate() {
+      let ok = true
+      if (!this.form.firstName.trim()) { this.errors.firstName = 'First name is required'; ok = false }
+      if (!this.form.lastName.trim()) { this.errors.lastName = 'Last name is required'; ok = false }
+      if (!this.form.email.trim()) { this.errors.email = 'Email is required'; ok = false }
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) { this.errors.email = 'Enter a valid email address'; ok = false }
+      if (!this.form.program.trim()) { this.errors.program = 'Program is required'; ok = false }
+      if (!this.form.enrollmentYear) { this.errors.enrollmentYear = 'Enrollment year is required'; ok = false }
+      else if (this.form.enrollmentYear < 2000 || this.form.enrollmentYear > 2099) { this.errors.enrollmentYear = 'Enter a valid year (2000–2099)'; ok = false }
+      return ok
+    },
+    async register() {
+      this.regError = ''
+      if (!this.validate()) return
+      this.regLoading = true
       try {
-        const res = await fetch(`/api/students/${this.find.studentId.trim()}`)
-        const data = await res.json()
-        this.find.isError = !res.ok
-        this.find.result = data
+        const body = {
+          firstName: this.form.firstName.trim(),
+          lastName: this.form.lastName.trim(),
+          email: this.form.email.trim(),
+          program: this.form.program.trim(),
+          enrollmentYear: this.form.enrollmentYear,
+          phoneNumber: this.form.phoneNumber.trim() || null
+        }
+        const res = await fetch('/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.message || 'Registration failed. Please check your details.')
+        }
+        const student = await res.json()
+
+        // Auto-login with the new studentId
+        const loginRes = await fetch('/api/students/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentId: student.studentId })
+        })
+        if (loginRes.ok) {
+          const loginData = await loginRes.json()
+          localStorage.setItem('studentId', loginData.studentId)
+          localStorage.setItem('studentName', `${loginData.firstName} ${loginData.lastName}`)
+          localStorage.setItem('token', loginData.token)
+        }
+
+        this.newStudentId = student.studentId
+        this.newStudentName = `${student.firstName} ${student.lastName}`
+        this.showSuccess = true
       } catch (e) {
-        this.find.isError = true; this.find.result = { message: e.message }
-      } finally { this.find.loading = false }
+        this.regError = e.message
+      } finally {
+        this.regLoading = false
+      }
+    },
+    finishRegistration() {
+      window.location.reload()
     },
     copyId(id) {
       navigator.clipboard.writeText(id).then(() => {
@@ -224,6 +281,7 @@ export default {
       return { 'badge--active': s === 'ACTIVE', 'badge--graduated': s === 'GRADUATED', 'badge--suspended': s === 'SUSPENDED', 'badge--leave': s === 'ON_LEAVE' }
     },
     formatStatus(s) {
+      if (!s) return ''
       return s === 'ON_LEAVE' ? 'On Leave' : s.charAt(0) + s.slice(1).toLowerCase()
     }
   }
@@ -233,135 +291,88 @@ export default {
 <style scoped>
 .page { min-height: 100vh; background: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
 
-/* Breadcrumb */
-.breadcrumb-bar { background: #fff; border-bottom: 1px solid #f1f5f9; padding: 0; }
-.breadcrumb-inner { max-width: 960px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 6px; }
+.breadcrumb-bar { background: #fff; border-bottom: 1px solid #f1f5f9; }
+.breadcrumb-inner { max-width: 860px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 6px; }
 .bc-link { font-size: 12px; color: #94a3b8; text-decoration: none; }
 .bc-link:hover { color: #64748b; }
 .bc-sep { font-size: 12px; color: #cbd5e1; }
 .bc-current { font-size: 12px; color: #475569; font-weight: 500; }
 
-.page-top { max-width: 960px; margin: 0 auto; padding: 32px 28px 0; }
-.page-title { font-size: 28px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; margin: 0 0 8px; }
-.page-sub { font-size: 14px; color: #64748b; line-height: 1.6; margin: 0; }
+.page-top { max-width: 860px; margin: 0 auto; padding: 28px 28px 0; }
+.page-title { font-size: 26px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+.page-sub { font-size: 14px; color: #64748b; margin: 0; }
 
-.content { max-width: 960px; margin: 0 auto; padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 16px; }
+.content { max-width: 860px; margin: 0 auto; padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 16px; }
 
-/* Search */
-.search-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 22px; }
-.search-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 1px; margin-bottom: 10px; }
-.search-row { display: flex; gap: 8px; }
-.search-input {
-  flex: 1; padding: 9px 13px; border: 1px solid #e2e8f0; border-radius: 7px;
-  font-size: 13px; color: #0f172a; background: #f8fafc; outline: none;
-  font-family: monospace; transition: border-color 0.15s;
-}
-.search-input:focus { border-color: #94a3b8; background: #fff; }
-.search-input::placeholder { color: #94a3b8; font-family: 'Segoe UI', system-ui, sans-serif; }
-.search-btn {
-  padding: 9px 18px; background: #0f172a; color: #fff; border: none;
-  border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer;
-  white-space: nowrap; transition: background 0.15s; display: flex; align-items: center;
-}
-.search-btn:hover:not(:disabled) { background: #1e293b; }
-.search-btn:disabled { opacity: 0.6; cursor: wait; }
+/* My Profile */
+.profile-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; }
+.profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.profile-avatar { width: 44px; height: 44px; background: #0f172a; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-name { font-size: 16px; font-weight: 700; color: #0f172a; }
+.profile-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; border-radius: 8px; padding: 14px; }
+.pf { display: flex; flex-direction: column; gap: 3px; }
+.pf-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.8px; }
+.pf-val { font-size: 13px; color: #0f172a; }
+.pf-val.mono { font-family: monospace; font-size: 11px; cursor: pointer; word-break: break-all; }
+.profile-loading { font-size: 13px; color: #94a3b8; padding: 8px 0; }
 
-.search-result { margin-top: 12px; border-radius: 8px; padding: 14px 16px; font-size: 14px; }
-.search-result--success { background: #f0fdf4; border: 1px solid #bbf7d0; }
-.search-result--error   { background: #fef2f2; border: 1px solid #fecaca; }
-.sr-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.sr-name { font-weight: 700; font-size: 15px; color: #0f172a; }
-.sr-email { font-size: 12px; color: #64748b; margin-top: 2px; }
-.sr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; padding: 12px; }
-.sr-field { display: flex; flex-direction: column; gap: 3px; }
-.sr-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.8px; }
-.sr-val { font-size: 13px; color: #0f172a; }
-.sr-val--mono { font-family: monospace; font-size: 11px; word-break: break-all; }
-.error-wrap { display: flex; align-items: center; gap: 8px; color: #b91c1c; font-size: 14px; }
+/* Not logged in */
+.not-logged-in { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #94a3b8; }
+.not-logged-in-title { font-size: 15px; font-weight: 600; color: #475569; }
+.not-logged-in-sub { font-size: 13px; color: #94a3b8; text-align: center; max-width: 360px; line-height: 1.5; }
+.reg-trigger-btn { margin-top: 4px; display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.reg-trigger-btn:hover { background: #1e293b; }
 
-/* Copy badge */
-.copy-badge { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; background: #0f172a; color: #fff; padding: 1px 6px; border-radius: 4px; vertical-align: middle; }
+/* Registration form card */
+.reg-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
+.reg-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
+.reg-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+.reg-sub { font-size: 13px; color: #94a3b8; margin-top: 3px; }
+.back-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 12px; color: #64748b; cursor: pointer; white-space: nowrap; }
+.back-btn:hover { background: #f1f5f9; }
 
-/* Table card */
-.table-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-.table-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 22px 0; gap: 12px; }
-.table-title { font-size: 14px; font-weight: 700; color: #0f172a; }
-.table-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.reg-form { display: flex; flex-direction: column; gap: 14px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.8px; }
+.req { color: #dc2626; }
+.opt { font-weight: 400; color: #cbd5e1; letter-spacing: 0; text-transform: none; font-size: 11px; }
+.form-input { padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; color: #0f172a; background: #f8fafc; outline: none; transition: border-color 0.15s; font-family: inherit; }
+.form-input:focus { border-color: #94a3b8; background: #fff; }
+.form-input--err { border-color: #fca5a5; background: #fff; }
+.form-err { font-size: 11px; color: #dc2626; }
 
-.header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.reg-error { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; font-size: 13px; color: #b91c1c; }
 
-/* Filter chips */
-.filter-chips { display: flex; gap: 4px; }
-.chip {
-  padding: 5px 12px; border: 1px solid #e2e8f0; border-radius: 20px;
-  font-size: 12px; font-weight: 500; color: #64748b; background: #fff;
-  cursor: pointer; transition: all 0.15s; white-space: nowrap;
-}
-.chip:hover { background: #f8fafc; border-color: #cbd5e1; }
-.chip--active { background: #0f172a; color: #fff; border-color: #0f172a; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+.cancel-btn { padding: 9px 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; color: #64748b; cursor: pointer; }
+.cancel-btn:hover:not(:disabled) { background: #f8fafc; }
+.cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 22px; background: #0f172a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.submit-btn:hover:not(:disabled) { background: #1e293b; }
+.submit-btn:disabled { opacity: 0.6; cursor: wait; }
 
-.refresh-btn {
-  width: 32px; height: 32px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center; color: #64748b;
-  cursor: pointer; transition: all 0.15s; flex-shrink: 0;
-}
-.refresh-btn:hover { background: #f8fafc; color: #0f172a; }
-.refresh-btn--loading { opacity: 0.5; cursor: wait; }
+/* Success overlay */
+.success-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.success-card { background: #fff; border-radius: 16px; padding: 36px 32px; width: 440px; max-width: calc(100vw - 32px); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.success-icon { width: 56px; height: 56px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #16a34a; }
+.success-title { font-size: 20px; font-weight: 700; color: #0f172a; }
+.success-sub { font-size: 14px; color: #64748b; }
+.success-id-label { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 0.8px; margin-top: 8px; }
+.success-id { font-family: monospace; font-size: 12px; color: #0f172a; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; cursor: pointer; word-break: break-all; position: relative; }
+.success-btn { margin-top: 8px; padding: 10px 24px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.success-btn:hover { background: #1e293b; }
 
-.table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-.table thead tr { border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
-.table th {
-  padding: 9px 22px; font-size: 10px; font-weight: 700; color: #94a3b8;
-  letter-spacing: 0.8px; text-align: left; background: #fafafa;
-}
-.table-row { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
-.table-row:last-child { border-bottom: none; }
-.table-row:hover { background: #f8fafc; }
-.table td { padding: 11px 22px; vertical-align: middle; }
-
-.student-cell { display: flex; align-items: center; gap: 10px; }
-.avatar {
-  width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0;
-  color: #475569; font-weight: 700; font-size: 12px;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.avatar--lg { width: 44px; height: 44px; font-size: 15px; }
-.cell-name { font-weight: 600; font-size: 13px; color: #0f172a; }
-.cell-email { font-size: 11px; color: #94a3b8; }
-.cell-uuid {
-  font-family: monospace; font-size: 11px; color: #94a3b8; cursor: pointer;
-  transition: color 0.1s; display: inline-flex; align-items: center; gap: 4px;
-}
-.cell-uuid:hover { color: #475569; }
-.cell-prog { font-size: 13px; color: #475569; }
+.copy-badge { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; background: #0f172a; color: #fff; padding: 1px 6px; border-radius: 4px; }
 
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
 .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.badge--active    { background: #f0fdf4; color: #16a34a; }
-.badge--active    .badge-dot { background: #16a34a; }
-.badge--graduated { background: #f1f5f9; color: #64748b; }
-.badge--graduated .badge-dot { background: #94a3b8; }
-.badge--suspended { background: #fef2f2; color: #dc2626; }
-.badge--suspended .badge-dot { background: #dc2626; }
-.badge--leave     { background: #fffbeb; color: #d97706; }
-.badge--leave     .badge-dot { background: #d97706; }
+.badge--active    { background: #f0fdf4; color: #16a34a; } .badge--active    .badge-dot { background: #16a34a; }
+.badge--graduated { background: #f1f5f9; color: #64748b; } .badge--graduated .badge-dot { background: #94a3b8; }
+.badge--suspended { background: #fef2f2; color: #dc2626; } .badge--suspended .badge-dot { background: #dc2626; }
+.badge--leave     { background: #fffbeb; color: #d97706; } .badge--leave     .badge-dot { background: #d97706; }
 
-.table-empty { text-align: center; padding: 36px; color: #94a3b8; font-size: 13px; }
-
-.table-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; border-top: 1px solid #f1f5f9; }
-.footer-count { font-size: 12px; color: #94a3b8; }
-.pagination { display: flex; gap: 6px; }
-.page-btn {
-  display: flex; align-items: center; gap: 4px;
-  padding: 5px 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 7px;
-  font-size: 12px; font-weight: 500; color: #475569; cursor: pointer; transition: background 0.15s;
-}
-.page-btn:hover:not(:disabled) { background: #f8fafc; }
-.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+.spinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

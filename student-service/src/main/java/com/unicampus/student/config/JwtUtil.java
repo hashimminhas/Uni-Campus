@@ -22,6 +22,17 @@ public class JwtUtil {
     public String generateToken(UUID studentId) {
         return Jwts.builder()
                 .subject(studentId.toString())
+                .claim("role", "STUDENT")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + EXPIRY_MS))
+                .signWith(key())
+                .compact();
+    }
+
+    public String generateAdminToken() {
+        return Jwts.builder()
+                .subject("admin")
+                .claim("role", "ADMIN")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRY_MS))
                 .signWith(key())
