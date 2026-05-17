@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 version: '3.8'
 
-=======
->>>>>>> 90a899274f252ead0c8ed43ebd487103c28a3074
 services:
   postgres:
     image: postgres:16
@@ -10,9 +7,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_INITDB_ARGS: "-c max_connections=100"
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -21,6 +18,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - unicampus-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -36,6 +35,101 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - unicampus-network
+
+  course-service:
+    build:
+      context: ./course-service
+      dockerfile: Dockerfile
+    container_name: unicampus-course-service
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - unicampus-network
+    restart: on-failure
+
+  exam-service:
+    build:
+      context: ./exam-service
+      dockerfile: Dockerfile
+    container_name: unicampus-exam-service
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      COURSE_SERVICE_URL: http://course-service:8083
+      COURSE_SERVICE_BASE_URL: http://course-service:8083
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      course-service:
+        condition: service_started
+    networks:
+      - unicampus-network
+    restart: on-failure
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: unicampus-notification-service
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+    ports:
+      - "8085:8085"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - unicampus-network
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: unicampus-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8084
+    ports:
+      - "5173:5173"
+    depends_on:
+      - exam-service
+      - course-service
+    networks:
+      - unicampus-network
+    restart: on-failure
 
 volumes:
   postgres_data:
+
+networks:
+  unicampus-network:
+    driver: bridge

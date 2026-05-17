@@ -37,3 +37,7 @@ messaging:
   routing-keys:
     enrollment-confirmed: ${COURSE_ENROLLMENT_CONFIRMED_KEY:enrollment.confirmed}
     course-dropped: ${COURSE_DROPPED_KEY:course.dropped}
+
+jwt:
+  secret: your-super-secret-key-that-is-at-least-32-chars-long-for-hs256-encryption-key
+  expiration: 3600000
