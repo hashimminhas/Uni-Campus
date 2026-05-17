@@ -1,35 +1,29 @@
 <template>
   <main class="container">
-    <div class="header">
-      <h1>UniCampus - Courses</h1>
-      <div class="user-info" v-if="isAuthenticated">
-        <span class="user-display">{{ username }} <span class="role-badge">{{ role }}</span></span>
-        <button @click="handleLogout" class="logout-btn">Logout</button>
-      </div>
-    </div>
-    
+    <h1>UniCampus - Courses</h1>
+
     <div v-if="loading" class="loading">
       <p>Loading courses...</p>
     </div>
-    
+
     <div v-else-if="error" class="error">
       <p>Error: {{ error }}</p>
     </div>
-    
+
     <div v-else class="courses-section">
       <h2>Available Courses</h2>
-      
+
       <div v-if="courses.length === 0" class="no-courses">
         <p>No courses available</p>
       </div>
-      
+
       <div v-else class="courses-list">
         <div v-for="course in courses" :key="course.courseId" class="course-card">
           <div class="course-header">
             <h3>{{ course.name }}</h3>
             <span class="course-id">ID: {{ course.courseId }}</span>
           </div>
-          
+
           <div class="course-details">
             <p><strong>Instructor:</strong> {{ course.instructor }}</p>
             <p><strong>Credits:</strong> {{ course.credits }}</p>
@@ -37,9 +31,9 @@
             <p><strong>Status:</strong> <span class="status" :class="course.status.toLowerCase()">{{ course.status }}</span></p>
             <p><strong>Capacity:</strong> {{ course.enrolledCount }} / {{ course.capacity }}</p>
           </div>
-          
+
           <div class="course-actions">
-            <button class="btn btn-primary" @click="enrollCourse(course.courseId)" 
+            <button class="btn btn-primary" @click="enrollCourse(course.courseId)"
                     v-if="course.status === 'OPEN' && course.enrolledCount < course.capacity">
               Enroll
             </button>
@@ -61,54 +55,18 @@ export default {
       courses: [],
       loading: true,
       error: null,
-      username: '',
-      role: '',
-      isAuthenticated: false
     }
   },
   mounted() {
-    this.checkAuthentication();
     this.fetchCourses();
   },
   methods: {
-    checkAuthentication() {
-      const token = localStorage.getItem('token');
-      const username = localStorage.getItem('username');
-      const role = localStorage.getItem('role');
-      
-      if (!token) {
-        this.$router.push('/login');
-        return;
-      }
-      
-      this.isAuthenticated = true;
-      this.username = username || 'User';
-      this.role = role || 'STUDENT';
-    },
-    
     async fetchCourses() {
       try {
         this.loading = true;
         this.error = null;
         
-        const token = localStorage.getItem('token');
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
-        
-        const response = await fetch('http://localhost:8083/courses', {
-          method: 'GET',
-          headers: headers
-        });
-        
-        if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('username');
-          localStorage.removeItem('role');
-          this.$router.push('/login');
-          return;
-        }
+        const response = await fetch('/api/courses');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -127,13 +85,7 @@ export default {
     
     enrollCourse(courseId) {
       alert(`Enrollment for course ${courseId} not yet implemented`);
-    },
-    
-    handleLogout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      localStorage.removeItem('role');
-      this.$router.push('/login');
+      // TODO: Implement enrollment with student ID
     }
   }
 }
@@ -147,53 +99,11 @@ export default {
   font-family: Arial, sans-serif;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 3px solid #007bff;
-}
-
 h1 {
   color: #333;
-  margin: 0;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.user-display {
-  font-size: 14px;
-  color: #666;
-}
-
-.role-badge {
-  background: #007bff;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.logout-btn {
-  padding: 8px 16px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-
-.logout-btn:hover {
-  background: #c82333;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 10px;
+  margin-bottom: 30px;
 }
 
 h2 {
