@@ -4,7 +4,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
-
+ECHO is off.
 FROM node:22-alpine
 WORKDIR /app
 RUN npm install -g serve
