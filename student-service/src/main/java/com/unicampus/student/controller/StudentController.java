@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 /** This is the front door of the student service — it receives HTTP requests and sends back responses.
@@ -22,6 +23,12 @@ public class StudentController {
 
     @Autowired
     private StudentService service;
+
+    @Operation(summary = "Get all students")
+    @GetMapping
+    public List<StudentResponse> getAllStudents() {
+        return service.getAllStudents();
+    }
 
     @Operation(summary = "Register a new student")
     @PostMapping

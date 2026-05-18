@@ -35,3 +35,7 @@ springdoc:
 course:
   service:
     base-url: http://localhost:8083
+
+jwt:
+  secret: your-super-secret-key-that-is-at-least-32-chars-long-for-hs256-encryption-key
+  expiration: 3600000
