@@ -31,9 +31,10 @@ public class SecurityConfig {
                 
                 // Allow anyone/students to browse the catalog, reserve loans, return books, or get loans
                 .requestMatchers(HttpMethod.GET, "/api/library/books").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/library/books/**/borrow").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/library/loans/**/return").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/library/books/*/borrow").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/library/loans/*/return").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/library/loans/student/**").permitAll()
+                .requestMatchers("/api/library/test/**").permitAll()
                 
                 // Swagger documentation and health monitoring endpoints
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()

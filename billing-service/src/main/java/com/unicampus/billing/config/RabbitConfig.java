@@ -46,6 +46,6 @@ public class RabbitConfig {
 
     @Bean
     public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+        return new org.springframework.amqp.support.converter.SimpleMessageConverter();
     }
 }
