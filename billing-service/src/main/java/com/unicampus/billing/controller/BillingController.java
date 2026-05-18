@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/billing")
+@RequestMapping("/billing")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(name = "Billing", description = "Billing Service APIs")
