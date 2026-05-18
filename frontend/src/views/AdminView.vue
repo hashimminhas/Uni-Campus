@@ -21,93 +21,197 @@
       </div>
     </div>
 
-    <!-- Admin dashboard -->
+    <!-- Admin Dashboard -->
     <div v-else class="dashboard">
 
       <!-- Header -->
       <div class="dash-header">
         <div>
-          <div class="dash-label">UNICAMPUS · ADMIN</div>
-          <div class="dash-title">Student Management</div>
+          <div class="dash-label">UNICAMPUS · ADMIN PANEL</div>
+          <div class="dash-title">Academic & Resource Console</div>
         </div>
         <button class="sign-out-btn" @click="signOut">Sign out</button>
       </div>
 
-      <!-- Stats row -->
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-n">{{ students.length }}</div>
-          <div class="stat-l">Total Students</div>
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs">
+        <button 
+          class="tab-btn" 
+          :class="{ 'tab-btn--active': activeTab === 'students' }" 
+          @click="switchTab('students')"
+        >
+          Student Registry
+        </button>
+        <button 
+          class="tab-btn" 
+          :class="{ 'tab-btn--active': activeTab === 'library' }" 
+          @click="switchTab('library')"
+        >
+          Library Inventory
+        </button>
+      </div>
+
+      <!-- TAB 1: Student Management -->
+      <div v-if="activeTab === 'students'" class="tab-content">
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-n">{{ students.length }}</div>
+            <div class="stat-l">Total Students</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-n">{{ countByStatus('ACTIVE') }}</div>
+            <div class="stat-l">Active</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-n">{{ countByStatus('GRADUATED') }}</div>
+            <div class="stat-l">Graduated</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-n">{{ countByStatus('SUSPENDED') }}</div>
+            <div class="stat-l">Suspended</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-n">{{ countByStatus('ON_LEAVE') }}</div>
+            <div class="stat-l">On Leave</div>
+          </div>
         </div>
-        <div class="stat-box">
-          <div class="stat-n">{{ countByStatus('ACTIVE') }}</div>
-          <div class="stat-l">Active</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-n">{{ countByStatus('GRADUATED') }}</div>
-          <div class="stat-l">Graduated</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-n">{{ countByStatus('SUSPENDED') }}</div>
-          <div class="stat-l">Suspended</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-n">{{ countByStatus('ON_LEAVE') }}</div>
-          <div class="stat-l">On Leave</div>
+
+        <!-- Table -->
+        <div class="table-card">
+          <div class="table-head">
+            <div class="table-title">All Registered Students</div>
+            <button class="refresh-btn" @click="fetchStudents" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+
+          <div v-if="loading" class="table-empty">Loading…</div>
+          <div v-else-if="students.length === 0" class="table-empty">No students found.</div>
+
+          <table v-else class="table">
+            <thead>
+              <tr>
+                <th>STUDENT</th>
+                <th>PROGRAM · YEAR</th>
+                <th>STATUS</th>
+                <th>CHANGE STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in students" :key="s.studentId" class="table-row">
+                <td>
+                  <div class="student-cell">
+                    <div class="avatar">{{ s.firstName[0] }}{{ s.lastName[0] }}</div>
+                    <div>
+                      <div class="cell-name">{{ s.firstName }} {{ s.lastName }}</div>
+                      <div class="cell-email">{{ s.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="cell-prog">{{ s.program }} · {{ s.enrollmentYear }}</td>
+                <td>
+                  <span class="badge" :class="badgeClass(s.academicStatus)">
+                    <span class="badge-dot"></span>{{ formatStatus(s.academicStatus) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="status-actions">
+                    <button v-for="opt in statusOptions" :key="opt.value"
+                      class="status-btn" :class="['status-btn--' + opt.cls, { 'status-btn--current': s.academicStatus === opt.value }]"
+                      :disabled="s.academicStatus === opt.value || !!updating[s.studentId]"
+                      @click="updateStatus(s, opt.value)">
+                      {{ opt.label }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="table-card">
-        <div class="table-head">
-          <div class="table-title">All Students</div>
-          <button class="refresh-btn" @click="fetchStudents" title="Refresh">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          </button>
+      <!-- TAB 2: Library Inventory Management -->
+      <div v-if="activeTab === 'library'" class="tab-content">
+        <div class="library-grid">
+          
+          <!-- Column Left: Book Creator -->
+          <div class="creator-card">
+            <h3 class="card-subtitle">Add New Resource</h3>
+            <p class="card-desc">Expand the university catalog database. Newly indexed items are instantly set as 'Available' for loan reservations.</p>
+            
+            <form @submit.prevent="createBook" class="creator-form">
+              <div class="form-group">
+                <label for="bookTitle">Book Title</label>
+                <input 
+                  id="bookTitle"
+                  v-model="newBookTitle"
+                  type="text" 
+                  placeholder="e.g. Introduction to Quantum Computing" 
+                  required 
+                  class="form-input"
+                />
+              </div>
+              <button type="submit" class="btn-submit-book" :disabled="bookSubmitLoading">
+                {{ bookSubmitLoading ? 'Saving to Database...' : 'Register Book' }}
+              </button>
+            </form>
+
+            <transition name="fade">
+              <div v-if="bookMessage" class="status-message" :class="{ 'status-message--error': bookMessageError }">
+                {{ bookMessage }}
+              </div>
+            </transition>
+          </div>
+
+          <!-- Column Right: Book Catalog List -->
+          <div class="table-card inventory-list">
+            <div class="table-head">
+              <div class="table-title">University Catalog ({{ books.length }} total)</div>
+              <button class="refresh-btn" @click="fetchBooks" title="Refresh Inventory">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+            </div>
+
+            <div v-if="booksLoading" class="table-empty">Loading book catalog ledger...</div>
+            <div v-else-if="books.length === 0" class="table-empty">No library items indexed yet.</div>
+
+            <table v-else class="table">
+              <thead>
+                <tr>
+                  <th>RESOURCE DESCRIPTION</th>
+                  <th>AVAILABILITY</th>
+                  <th class="text-right">MANAGE INVENTORY</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="b in books" :key="b.bookId" class="table-row">
+                  <td class="book-details">
+                    <span class="book-title-txt">{{ b.title }}</span>
+                    <span class="book-id-txt">ID: {{ b.bookId }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" :class="b.isAvailable ? 'badge--available' : 'badge--borrowed'">
+                      <span class="badge-dot"></span>
+                      {{ b.isAvailable ? 'Available' : 'Loaned Out' }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <button 
+                      class="toggle-btn" 
+                      :class="b.isAvailable ? 'toggle-btn--disable' : 'toggle-btn--enable'"
+                      @click="toggleBookAvailability(b)"
+                      :disabled="!!catalogUpdating[b.bookId]"
+                    >
+                      {{ b.isAvailable ? 'Flag Unavailable' : 'Flag Restocked' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
         </div>
-
-        <div v-if="loading" class="table-empty">Loading…</div>
-        <div v-else-if="students.length === 0" class="table-empty">No students found.</div>
-
-        <table v-else class="table">
-          <thead>
-            <tr>
-              <th>STUDENT</th>
-              <th>PROGRAM · YEAR</th>
-              <th>STATUS</th>
-              <th>CHANGE STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="s in students" :key="s.studentId" class="table-row">
-              <td>
-                <div class="student-cell">
-                  <div class="avatar">{{ s.firstName[0] }}{{ s.lastName[0] }}</div>
-                  <div>
-                    <div class="cell-name">{{ s.firstName }} {{ s.lastName }}</div>
-                    <div class="cell-email">{{ s.email }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="cell-prog">{{ s.program }} · {{ s.enrollmentYear }}</td>
-              <td>
-                <span class="badge" :class="badgeClass(s.academicStatus)">
-                  <span class="badge-dot"></span>{{ formatStatus(s.academicStatus) }}
-                </span>
-              </td>
-              <td>
-                <div class="status-actions">
-                  <button v-for="opt in statusOptions" :key="opt.value"
-                    class="status-btn" :class="['status-btn--' + opt.cls, { 'status-btn--current': s.academicStatus === opt.value }]"
-                    :disabled="s.academicStatus === opt.value || !!updating[s.studentId]"
-                    @click="updateStatus(s, opt.value)">
-                    {{ opt.label }}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
 
     </div>
@@ -120,9 +224,12 @@ export default {
   data() {
     return {
       adminToken: '',
+      activeTab: 'students', // 'students' or 'library'
       creds: { username: '', password: '' },
       loginError: '',
       loginLoading: false,
+      
+      // Student Tab variables
       students: [],
       loading: false,
       updating: {},
@@ -131,12 +238,25 @@ export default {
         { value: 'GRADUATED', label: 'Graduate',  cls: 'graduated' },
         { value: 'SUSPENDED', label: 'Suspend',   cls: 'suspended' },
         { value: 'ON_LEAVE',  label: 'On Leave',  cls: 'leave'     },
-      ]
+      ],
+
+      // Library Tab variables
+      books: [],
+      booksLoading: false,
+      newBookTitle: '',
+      bookSubmitLoading: false,
+      bookMessage: '',
+      bookMessageError: false,
+      catalogUpdating: {}
     }
   },
   mounted() {
     const t = localStorage.getItem('adminToken')
-    if (t) { this.adminToken = t; this.fetchStudents() }
+    if (t) { 
+      this.adminToken = t; 
+      this.fetchStudents();
+      this.fetchBooks();
+    }
   },
   methods: {
     async adminLogin() {
@@ -151,15 +271,28 @@ export default {
         const data = await res.json()
         this.adminToken = data.token
         localStorage.setItem('adminToken', data.token)
-        await this.fetchStudents()
+        await Promise.all([
+          this.fetchStudents(),
+          this.fetchBooks()
+        ]);
       } catch (e) {
         this.loginError = e.message
       } finally { this.loginLoading = false }
     },
     signOut() {
-      this.adminToken = ''; this.students = []
+      this.adminToken = ''; 
+      this.students = [];
+      this.books = [];
       localStorage.removeItem('adminToken')
     },
+    switchTab(tab) {
+      this.activeTab = tab;
+      this.bookMessage = '';
+      if (tab === 'students') this.fetchStudents();
+      if (tab === 'library') this.fetchBooks();
+    },
+    
+    // ── Student Management Operations ──────────────────────────────────
     async fetchStudents() {
       this.loading = true
       try {
@@ -197,6 +330,78 @@ export default {
     },
     formatStatus(s) {
       return s === 'ON_LEAVE' ? 'On Leave' : s.charAt(0) + s.slice(1).toLowerCase()
+    },
+
+    // ── Library Inventory Operations ───────────────────────────────────
+    async fetchBooks() {
+      this.booksLoading = true;
+      try {
+        const res = await fetch('/api/library/books');
+        if (res.ok) {
+          this.books = await res.json();
+        }
+      } catch (e) {
+        console.error('Error fetching book inventory catalog:', e);
+      } finally {
+        this.booksLoading = false;
+      }
+    },
+    async createBook() {
+      if (!this.newBookTitle.trim()) return;
+      this.bookSubmitLoading = true;
+      this.bookMessage = '';
+      this.bookMessageError = false;
+      try {
+        const res = await fetch('/api/library/books', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.adminToken}`
+          },
+          body: JSON.stringify({ title: this.newBookTitle.trim() })
+        });
+        
+        if (res.ok) {
+          this.bookMessage = `Successfully indexed "${this.newBookTitle}" into standard availability.`;
+          this.newBookTitle = '';
+          await this.fetchBooks();
+        } else {
+          throw new Error('Server rejected book indexing transaction.');
+        }
+      } catch (e) {
+        this.bookMessage = e.message || 'Connection failure to library catalog service.';
+        this.bookMessageError = true;
+      } finally {
+        this.bookSubmitLoading = false;
+      }
+    },
+    async toggleBookAvailability(book) {
+      this.catalogUpdating = { ...this.catalogUpdating, [book.bookId]: true };
+      try {
+        const updatedStatus = !book.isAvailable;
+        const res = await fetch(`/api/library/books/${book.bookId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.adminToken}`
+          },
+          body: JSON.stringify({
+            title: book.title,
+            isAvailable: updatedStatus
+          })
+        });
+        if (res.ok) {
+          const updatedBook = await res.json();
+          const idx = this.books.findIndex(b => b.bookId === book.bookId);
+          if (idx !== -1) {
+            this.books[idx] = updatedBook;
+          }
+        }
+      } catch (e) {
+        console.error('Error toggling resource state:', e);
+      } finally {
+        const u = { ...this.catalogUpdating }; delete u[book.bookId]; this.catalogUpdating = u;
+      }
     }
   }
 }
@@ -222,7 +427,7 @@ export default {
 .login-btn:hover:not(:disabled) { background: #1e293b; }
 .login-btn:disabled { opacity: 0.6; cursor: wait; }
 
-/* Dashboard */
+/* Dashboard Layout */
 .dashboard { max-width: 1100px; margin: 0 auto; padding: 36px 28px; }
 .dash-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
 .dash-label { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 4px; }
@@ -230,13 +435,50 @@ export default {
 .sign-out-btn { padding: 7px 16px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; color: #64748b; cursor: pointer; }
 .sign-out-btn:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 
-/* Stats */
+/* Nav Tabs */
+.nav-tabs { display: flex; gap: 8px; margin-bottom: 28px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+.tab-btn { background: none; border: none; padding: 8px 16px; font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.15s; }
+.tab-btn:hover { background: #f1f5f9; color: #0f172a; }
+.tab-btn--active { background: #0f172a; color: #fff; }
+.tab-btn--active:hover { background: #1e293b; color: #fff; }
+
+/* Stats (Student tab) */
 .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
 .stat-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; }
 .stat-n { font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
 .stat-l { font-size: 12px; color: #94a3b8; margin-top: 3px; }
 
-/* Table */
+/* Library Layout Columns */
+.library-grid { display: grid; grid-template-columns: 1fr 1.8fr; gap: 24px; align-items: start; }
+.creator-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
+.card-subtitle { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+.card-desc { font-size: 13px; color: #64748b; margin: 0 0 20px; line-height: 1.5; }
+.creator-form { display: flex; flex-direction: column; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input { padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.15s; }
+.form-input:focus { border-color: #0f172a; }
+.btn-submit-book { background: #0f172a; color: #fff; padding: 11px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+.btn-submit-book:hover:not(:disabled) { background: #1e293b; }
+.btn-submit-book:disabled { opacity: 0.6; cursor: wait; }
+
+.status-message { font-size: 12px; font-weight: 600; color: #16a34a; background: #f0fdf4; border: 1px solid #dcfce7; padding: 10px; border-radius: 6px; margin-top: 14px; text-align: center; }
+.status-message--error { color: #dc2626; background: #fef2f2; border-color: #fee2e2; }
+
+/* Book Inventory List Row Detail */
+.book-details { display: flex; flex-direction: column; gap: 2px; }
+.book-title-txt { font-weight: 600; color: #334155; }
+.book-id-txt { font-size: 10px; color: #94a3b8; font-family: monospace; }
+.text-right { text-align: right; }
+
+.toggle-btn { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 6px; cursor: pointer; border: 1px solid; background: none; transition: all 0.15s; }
+.toggle-btn:disabled { opacity: 0.5; cursor: wait; }
+.toggle-btn--disable { border-color: #fecaca; color: #dc2626; }
+.toggle-btn--disable:hover:not(:disabled) { background: #fef2f2; }
+.toggle-btn--enable { border-color: #bbf7d0; color: #16a34a; }
+.toggle-btn--enable:hover:not(:disabled) { background: #f0fdf4; }
+
+/* Table general styles */
 .table-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
 .table-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid #f1f5f9; }
 .table-title { font-size: 14px; font-weight: 700; color: #0f172a; }
@@ -259,10 +501,12 @@ export default {
 
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
 .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.badge--active    { background: #f0fdf4; color: #16a34a; } .badge--active    .badge-dot { background: #16a34a; }
-.badge--graduated { background: #f1f5f9; color: #64748b; } .badge--graduated .badge-dot { background: #94a3b8; }
-.badge--suspended { background: #fef2f2; color: #dc2626; } .badge--suspended .badge-dot { background: #dc2626; }
-.badge--leave     { background: #fffbeb; color: #d97706; } .badge--leave     .badge-dot { background: #d97706; }
+.badge--active      { background: #f0fdf4; color: #16a34a; } .badge--active      .badge-dot { background: #16a34a; }
+.badge--graduated   { background: #f1f5f9; color: #64748b; } .badge--graduated   .badge-dot { background: #94a3b8; }
+.badge--suspended   { background: #fef2f2; color: #dc2626; } .badge--suspended   .badge-dot { background: #dc2626; }
+.badge--leave       { background: #fffbeb; color: #d97706; } .badge--leave       .badge-dot { background: #d97706; }
+.badge--available   { background: #f0fdf4; color: #16a34a; } .badge--available   .badge-dot { background: #16a34a; }
+.badge--borrowed    { background: #fff7ed; color: #ea580c; } .badge--borrowed    .badge-dot { background: #ea580c; }
 
 /* Status action buttons */
 .status-actions { display: flex; gap: 4px; flex-wrap: wrap; }
@@ -277,4 +521,8 @@ export default {
 .status-btn--suspended:hover:not(:disabled) { background: #fee2e2; }
 .status-btn--leave     { border-color: #fde68a; color: #d97706; background: #fffbeb; }
 .status-btn--leave:hover:not(:disabled)     { background: #fef3c7; }
+
+/* Transitions */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
