@@ -83,9 +83,8 @@ export default {
       }
     },
     
-    enrollCourse(courseId) {
-      alert(`Enrollment for course ${courseId} not yet implemented`);
-      // TODO: Implement enrollment with student ID
+    enrollCourse() {
+      alert('Enrollment is not yet implemented.')
     }
   }
 }
