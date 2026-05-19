@@ -47,6 +47,7 @@ npm install       # first time only
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
+If `localhost` fails on your machine, use `http://127.0.0.1:5173/` instead.
 
 ### 3. Access Swagger UI
 Each service exposes Swagger UI directly:
