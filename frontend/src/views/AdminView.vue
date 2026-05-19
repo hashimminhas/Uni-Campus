@@ -49,6 +49,20 @@
         >
           Library Inventory
         </button>
+        <button 
+          class="tab-btn" 
+          :class="{ 'tab-btn--active': activeTab === 'dormitory' }" 
+          @click="switchTab('dormitory')"
+        >
+          Dormitory Management
+        </button>
+        <button 
+          class="tab-btn" 
+          :class="{ 'tab-btn--active': activeTab === 'mealPlan' }" 
+          @click="switchTab('mealPlan')"
+        >
+          Meal Plan Configuration
+        </button>
       </div>
 
       <!-- TAB 1: Student Management -->
@@ -214,6 +228,170 @@
         </div>
       </div>
 
+      <!-- TAB 3: Dormitory Management -->
+      <div v-if="activeTab === 'dormitory'" class="tab-content">
+        <div class="library-grid">
+          
+          <!-- Column Left: Dormitory Creator -->
+          <div class="creator-card">
+            <h3 class="card-subtitle">Add New Room</h3>
+            <p class="card-desc">Register a new room in the dormitory system. Upon creation, it will be available for student assignments.</p>
+            
+            <form @submit.prevent="createDorm" class="creator-form">
+              <div class="form-group">
+                <label for="dormBuilding">Building</label>
+                <input id="dormBuilding" v-model="newDorm.building" type="text" placeholder="e.g. North Hall" required class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="dormRoomNumber">Room Number</label>
+                <input id="dormRoomNumber" v-model="newDorm.roomNumber" type="text" placeholder="e.g. A101" required class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="dormCapacity">Capacity</label>
+                <input id="dormCapacity" v-model.number="newDorm.capacity" type="number" min="1" required class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="dormAmenities">Amenities (comma separated)</label>
+                <input id="dormAmenities" v-model="newDorm.amenities" type="text" placeholder="e.g. WiFi, AC" class="form-input" />
+              </div>
+              <button type="submit" class="btn-submit-book" :disabled="dormSubmitLoading">
+                {{ dormSubmitLoading ? 'Saving to Database...' : 'Register Room' }}
+              </button>
+            </form>
+
+            <transition name="fade">
+              <div v-if="dormMessage" class="status-message" :class="{ 'status-message--error': dormMessageError }">
+                {{ dormMessage }}
+              </div>
+            </transition>
+          </div>
+
+          <!-- Column Right: Room List -->
+          <div class="table-card inventory-list">
+            <div class="table-head">
+              <div class="table-title">Dormitory Rooms ({{ dorms.length }} total)</div>
+              <button class="refresh-btn" @click="fetchDorms" title="Refresh Rooms">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+            </div>
+
+            <div v-if="dormsLoading" class="table-empty">Loading dormitory records...</div>
+            <div v-else-if="dorms.length === 0" class="table-empty">No rooms registered yet.</div>
+
+            <table v-else class="table">
+              <thead>
+                <tr>
+                  <th>ROOM DETAILS</th>
+                  <th>CAPACITY</th>
+                  <th class="text-right">STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in dorms" :key="d.roomId" class="table-row">
+                  <td class="book-details">
+                    <span class="book-title-txt">{{ d.building }} - {{ d.roomNumber }}</span>
+                    <span class="book-id-txt">Amenities: {{ d.amenities ? d.amenities.join(', ') : 'None' }}</span>
+                  </td>
+                  <td>
+                    {{ d.currentOccupancy }} / {{ d.capacity }}
+                  </td>
+                  <td class="text-right">
+                    <span class="badge" :class="d.isAvailable && d.currentOccupancy < d.capacity ? 'badge--available' : 'badge--suspended'">
+                      <span class="badge-dot"></span>
+                      {{ d.isAvailable && d.currentOccupancy < d.capacity ? 'Available' : 'Full / Unavailable' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: Meal Plan Configuration -->
+      <div v-if="activeTab === 'mealPlan'" class="tab-content">
+        <div class="library-grid">
+          
+          <!-- Column Left: Meal Plan Creator -->
+          <div class="creator-card">
+            <h3 class="card-subtitle">Create Meal Plan</h3>
+            <p class="card-desc">Add a new meal plan package for the upcoming semester.</p>
+            
+            <form @submit.prevent="createMealPlan" class="creator-form">
+              <div class="form-group">
+                <label for="planName">Plan Name</label>
+                <input id="planName" v-model="newPlan.name" type="text" placeholder="e.g. Premium Plan" required class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="planSemester">Semester</label>
+                <input id="planSemester" v-model="newPlan.semester" type="text" placeholder="e.g. Fall 2026" required class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="planMeals">Meals Per Week</label>
+                <input id="planMeals" v-model.number="newPlan.mealsPerWeek" type="number" min="1" required class="form-input" />
+              </div>
+              <div class="form-group">
+                <label for="planPrice">Price ($)</label>
+                <input id="planPrice" v-model.number="newPlan.price" type="number" min="0" step="0.01" required class="form-input" />
+              </div>
+              <button type="submit" class="btn-submit-book" :disabled="planSubmitLoading">
+                {{ planSubmitLoading ? 'Saving...' : 'Create Plan' }}
+              </button>
+            </form>
+
+            <transition name="fade">
+              <div v-if="planMessage" class="status-message" :class="{ 'status-message--error': planMessageError }">
+                {{ planMessage }}
+              </div>
+            </transition>
+          </div>
+
+          <!-- Column Right: Meal Plan List -->
+          <div class="table-card inventory-list">
+            <div class="table-head">
+              <div class="table-title">Available Meal Plans ({{ mealPlans.length }} total)</div>
+              <button class="refresh-btn" @click="fetchMealPlans" title="Refresh Plans">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+            </div>
+
+            <div v-if="plansLoading" class="table-empty">Loading meal plans...</div>
+            <div v-else-if="mealPlans.length === 0" class="table-empty">No meal plans created yet.</div>
+
+            <table v-else class="table">
+              <thead>
+                <tr>
+                  <th>PLAN DETAILS</th>
+                  <th>OFFERING</th>
+                  <th class="text-right">MANAGE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="p in mealPlans" :key="p.planId" class="table-row">
+                  <td class="book-details">
+                    <span class="book-title-txt">{{ p.name }}</span>
+                    <span class="book-id-txt">{{ p.semester }}</span>
+                  </td>
+                  <td>
+                    {{ p.mealsPerWeek }} meals/wk · ${{ p.price }}
+                  </td>
+                  <td class="text-right">
+                    <button 
+                      class="toggle-btn" 
+                      :class="p.isActive ? 'toggle-btn--disable' : 'toggle-btn--enable'"
+                      @click="togglePlanStatus(p)"
+                      :disabled="!!planUpdating[p.planId]"
+                    >
+                      {{ p.isActive ? 'Deactivate' : 'Activate' }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -249,7 +427,24 @@ export default {
       bookSubmitLoading: false,
       bookMessage: '',
       bookMessageError: false,
-      catalogUpdating: {}
+      catalogUpdating: {},
+
+      // Dormitory Tab variables
+      dorms: [],
+      dormsLoading: false,
+      newDorm: { roomNumber: '', building: '', capacity: 1, amenities: '' },
+      dormSubmitLoading: false,
+      dormMessage: '',
+      dormMessageError: false,
+
+      // Meal Plan Tab variables
+      mealPlans: [],
+      plansLoading: false,
+      newPlan: { name: '', mealsPerWeek: 10, price: 0, semester: 'Fall 2026' },
+      planSubmitLoading: false,
+      planMessage: '',
+      planMessageError: false,
+      planUpdating: {}
     }
   },
   mounted() {
@@ -258,6 +453,8 @@ export default {
       this.adminToken = t; 
       this.fetchStudents();
       this.fetchBooks();
+      this.fetchDorms();
+      this.fetchMealPlans();
     }
   },
   methods: {
@@ -275,7 +472,9 @@ export default {
         localStorage.setItem('adminToken', data.token)
         await Promise.all([
           this.fetchStudents(),
-          this.fetchBooks()
+          this.fetchBooks(),
+          this.fetchDorms(),
+          this.fetchMealPlans()
         ]);
       } catch (e) {
         this.loginError = e.message
@@ -285,13 +484,19 @@ export default {
       this.adminToken = ''; 
       this.students = [];
       this.books = [];
+      this.dorms = [];
+      this.mealPlans = [];
       localStorage.removeItem('adminToken')
     },
     switchTab(tab) {
       this.activeTab = tab;
       this.bookMessage = '';
+      this.dormMessage = '';
+      this.planMessage = '';
       if (tab === 'students') this.fetchStudents();
       if (tab === 'library') this.fetchBooks();
+      if (tab === 'dormitory') this.fetchDorms();
+      if (tab === 'mealPlan') this.fetchMealPlans();
     },
     
     // ── Student Management Operations ──────────────────────────────────
@@ -403,6 +608,116 @@ export default {
         console.error('Error toggling resource state:', e);
       } finally {
         const u = { ...this.catalogUpdating }; delete u[book.bookId]; this.catalogUpdating = u;
+      }
+    },
+
+    // ── Dormitory Management Operations ──────────────────────────────────
+    async fetchDorms() {
+      this.dormsLoading = true;
+      try {
+        const res = await fetch('/api/dormitory/rooms', {
+          headers: { 'Authorization': `Bearer ${this.adminToken}` }
+        });
+        if (res.ok) this.dorms = await res.json();
+      } catch (e) {
+        console.error('Error fetching rooms:', e);
+      } finally {
+        this.dormsLoading = false;
+      }
+    },
+    async createDorm() {
+      if (!this.newDorm.building || !this.newDorm.roomNumber) return;
+      this.dormSubmitLoading = true;
+      this.dormMessage = '';
+      this.dormMessageError = false;
+      try {
+        const payload = {
+          ...this.newDorm,
+          amenities: this.newDorm.amenities.split(',').map(s => s.trim()).filter(s => s)
+        };
+        const res = await fetch('/api/dormitory/rooms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.adminToken}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        if (res.ok) {
+          this.dormMessage = `Successfully added room ${this.newDorm.roomNumber} in ${this.newDorm.building}.`;
+          this.newDorm = { roomNumber: '', building: '', capacity: 1, amenities: '' };
+          await this.fetchDorms();
+        } else {
+          throw new Error('Failed to register room.');
+        }
+      } catch (e) {
+        this.dormMessage = e.message || 'Error communicating with dormitory service';
+        this.dormMessageError = true;
+      } finally {
+        this.dormSubmitLoading = false;
+      }
+    },
+
+    // ── Meal Plan Configuration Operations ───────────────────────────────
+    async fetchMealPlans() {
+      this.plansLoading = true;
+      try {
+        const res = await fetch('/api/meal-plan/plans', {
+          headers: { 'Authorization': `Bearer ${this.adminToken}` }
+        });
+        if (res.ok) this.mealPlans = await res.json();
+      } catch (e) {
+        console.error('Error fetching meal plans:', e);
+      } finally {
+        this.plansLoading = false;
+      }
+    },
+    async createMealPlan() {
+      if (!this.newPlan.name || !this.newPlan.semester) return;
+      this.planSubmitLoading = true;
+      this.planMessage = '';
+      this.planMessageError = false;
+      try {
+        const res = await fetch('/api/meal-plan/plans', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.adminToken}`
+          },
+          body: JSON.stringify(this.newPlan)
+        });
+        
+        if (res.ok) {
+          this.planMessage = `Successfully created meal plan "${this.newPlan.name}".`;
+          this.newPlan = { name: '', mealsPerWeek: 10, price: 0, semester: 'Fall 2026' };
+          await this.fetchMealPlans();
+        } else {
+          throw new Error('Failed to create meal plan.');
+        }
+      } catch (e) {
+        this.planMessage = e.message || 'Error communicating with meal plan service';
+        this.planMessageError = true;
+      } finally {
+        this.planSubmitLoading = false;
+      }
+    },
+    async togglePlanStatus(plan) {
+      this.planUpdating = { ...this.planUpdating, [plan.planId]: true };
+      try {
+        const res = await fetch(`/api/meal-plan/plans/${plan.planId}/toggle`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${this.adminToken}` }
+        });
+        if (res.ok) {
+          const updatedPlan = await res.json();
+          const idx = this.mealPlans.findIndex(p => p.planId === plan.planId);
+          if (idx !== -1) this.mealPlans[idx] = updatedPlan;
+        }
+      } catch (e) {
+        console.error('Error toggling meal plan status:', e);
+      } finally {
+        const u = { ...this.planUpdating }; delete u[plan.planId]; this.planUpdating = u;
       }
     }
   }

@@ -15,12 +15,12 @@ import java.util.Map;
 public class FallbackController {
 
     @GetMapping("/fallback")
-    public Mono<Map<String, Object>> fallback() {
-        return Mono.just(Map.of(
+    public Mono<org.springframework.http.ResponseEntity<Map<String, Object>>> fallback() {
+        return Mono.just(org.springframework.http.ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                 "status", HttpStatus.SERVICE_UNAVAILABLE.value(),
                 "error", "Service Unavailable",
                 "message", "The upstream service is temporarily unavailable. Please try again later.",
                 "timestamp", Instant.now().toString()
-        ));
+        )));
     }
 }
