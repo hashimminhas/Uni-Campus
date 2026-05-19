@@ -25,4 +25,4 @@ springdoc:
     path: /swagger-ui.html
 
 student-service:
-  url: http://localhost:8081
+  url: ${STUDENT_SERVICE_URL:http://localhost:8081}
