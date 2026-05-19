@@ -49,6 +49,13 @@ public class NotificationController {
         return notificationService.getNotificationsByStudentId(studentId);
     }
 
+    @Operation(summary = "Delete (dismiss) a notification")
+    @DeleteMapping("/{notificationId}")
+    public ResponseEntity<Void> deleteNotification(@PathVariable UUID notificationId) {
+        notificationService.deleteNotification(notificationId);
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "Check notification delivery status")
     @GetMapping("/{notificationId}/status")
     public NotificationStatusResponse getNotificationStatus(@PathVariable UUID notificationId) {

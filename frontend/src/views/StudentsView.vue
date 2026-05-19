@@ -1,15 +1,6 @@
 <template>
   <div class="page">
 
-    <!-- Breadcrumb -->
-    <div class="breadcrumb-bar">
-      <div class="breadcrumb-inner">
-        <router-link to="/" class="bc-link">Home</router-link>
-        <span class="bc-sep">/</span>
-        <span class="bc-current">Students</span>
-      </div>
-    </div>
-
     <div class="page-top">
       <h1 class="page-title">Student Registry</h1>
       <p class="page-sub">Register a new account or view your own profile.</p>
@@ -155,6 +146,7 @@
           <span v-if="copied === newStudentId" class="copy-badge">Copied!</span>
         </div>
         <button class="success-btn" @click="finishRegistration">Go to My Profile</button>
+        <button class="success-dismiss-btn" @click="dismissSuccess">Stay on this page</button>
       </div>
     </div>
 
@@ -197,8 +189,22 @@ export default {
   },
   mounted() {
     if (this.studentId) this.fetchProfile()
+    window.addEventListener('storage', this.onStorageChange)
+  },
+  beforeUnmount() {
+    window.removeEventListener('storage', this.onStorageChange)
   },
   methods: {
+    onStorageChange() {
+      const newId = localStorage.getItem('studentId') || ''
+      const newName = localStorage.getItem('studentName') || ''
+      if (newId !== this.studentId) {
+        this.studentId = newId
+        this.studentName = newName
+        this.profile = null
+        if (newId) this.fetchProfile()
+      }
+    },
     async fetchProfile() {
       try {
         const res = await fetch(`/api/students/${this.studentId}`)
@@ -270,6 +276,13 @@ export default {
     },
     finishRegistration() {
       window.location.reload()
+    },
+    dismissSuccess() {
+      this.studentId = this.newStudentId
+      this.studentName = this.newStudentName
+      this.profile = null
+      this.showSuccess = false
+      this.fetchProfile()
     },
     copyId(id) {
       navigator.clipboard.writeText(id).then(() => {
@@ -363,6 +376,8 @@ export default {
 .success-id { font-family: monospace; font-size: 12px; color: #0f172a; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; cursor: pointer; word-break: break-all; position: relative; }
 .success-btn { margin-top: 8px; padding: 10px 24px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .success-btn:hover { background: #1e293b; }
+.success-dismiss-btn { background: none; border: 1px solid #e2e8f0; color: #64748b; padding: 8px 20px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.success-dismiss-btn:hover { background: #f8fafc; }
 
 .copy-badge { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; background: #0f172a; color: #fff; padding: 1px 6px; border-radius: 4px; }
 

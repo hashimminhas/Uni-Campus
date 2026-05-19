@@ -6,34 +6,12 @@
       <div class="hero-inner">
         <div class="breadcrumb">UNICAMPUS · STUDENT PORTAL</div>
         <h1 class="hero-title">Everything you need to run your academic life.</h1>
-        <p class="hero-sub">Records, courses, library, hostel, fees and exams — a single calm workspace for students and the registrar's office.</p>
+        <p class="hero-sub">Records, courses, library, hostel, fees and exams a single calm workspace for students and the registrar's office.</p>
         <div class="hero-actions">
           <router-link to="/students" class="btn-primary">Explore services</router-link>
           <router-link to="/library" class="btn-ghost">Visit the library</router-link>
         </div>
 
-        <!-- Stats strip -->
-        <div class="stats-strip">
-          <div class="stat-item">
-            <div class="stat-num">12,480</div>
-            <div class="stat-label">Enrolled students</div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-num">342</div>
-            <div class="stat-label">Active courses</div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-num">98%</div>
-            <div class="stat-label">Retention rate</div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-num">24/7</div>
-            <div class="stat-label">Support</div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -163,12 +141,6 @@ export default { name: 'LandingView' }
 .btn-ghost { color: #475569; padding: 11px 18px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; border: 1px solid #e2e8f0; transition: all 0.15s; }
 .btn-ghost:hover { background: #f1f5f9; border-color: #cbd5e1; }
 
-/* Stats strip */
-.stats-strip { display: flex; align-items: center; gap: 0; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 32px; max-width: 560px; }
-.stat-item { flex: 1; text-align: center; }
-.stat-num { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
-.stat-label { font-size: 11px; color: #94a3b8; margin-top: 3px; }
-.stat-divider { width: 1px; height: 36px; background: #e2e8f0; flex-shrink: 0; }
 
 /* Services */
 .services { max-width: 1100px; margin: 0 auto; padding: 48px 32px 48px; flex: 1; }

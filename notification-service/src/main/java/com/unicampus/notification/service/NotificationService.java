@@ -57,6 +57,12 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    public void deleteNotification(UUID notificationId) {
+        if (!notificationRepository.existsById(notificationId))
+            throw new NotificationNotFoundException(notificationId);
+        notificationRepository.deleteById(notificationId);
+    }
+
     public NotificationStatusResponse getNotificationStatus(UUID notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new NotificationNotFoundException(notificationId));

@@ -29,13 +29,11 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-  api-docs:
-    path: /api-docs
 
 course:
   service:
     base-url: http://localhost:8083
 
 jwt:
-  secret: your-super-secret-key-that-is-at-least-32-chars-long-for-hs256-encryption-key
+  secret: unicampus-jwt-secret-key-for-cp3-2026-abcdef123456
   expiration: 3600000

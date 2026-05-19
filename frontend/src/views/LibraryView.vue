@@ -1,70 +1,93 @@
 <template>
-  <main class="container">
-    <h1>UniCampus - Library</h1>
+  <div class="lib-page">
 
-    <div v-if="loading" class="loading">
-      <p>Loading books...</p>
+    <!-- Page header -->
+    <div class="lib-header">
+      <div class="lib-header-inner">
+        <div class="lib-eyebrow">CAMPUS LIBRARY</div>
+        <h1 class="lib-title">Catalog & Borrowing</h1>
+        <p class="lib-sub">Browse the academic catalog and borrow titles for up to 14 days. You'll receive a notification each time you check out or return a book.</p>
+      </div>
     </div>
 
-    <div v-else-if="error" class="error">
-      <p>Error: {{ error }}</p>
-    </div>
+    <div class="lib-body">
 
-    <div v-else class="books-section">
-      <div v-if="studentId" class="my-loans-section">
-        <h2>My Borrowed Books</h2>
-        <div v-if="activeLoans.length === 0" class="no-books">
-          <p>You haven't borrowed any books.</p>
+      <div v-if="loading" class="lib-state">Loading books…</div>
+      <div v-else-if="error" class="lib-state lib-state--error">{{ error }}</div>
+
+      <div v-else class="lib-card">
+        <div class="lib-card-head">
+          <div>
+            <div class="lib-card-title">Available Books</div>
+            <div v-if="studentId && activeLoans.length > 0" class="lib-card-sub">
+              You currently have {{ activeLoans.length }} book{{ activeLoans.length !== 1 ? 's' : '' }} on loan
+            </div>
+          </div>
+          <span class="lib-count">{{ books.length }} titles</span>
         </div>
-        <div v-else class="books-list">
-          <div v-for="loan in activeLoans" :key="loan.loanId" class="book-card my-loan-card">
-            <div class="book-header">
-              <h3>{{ loan.bookTitle }}</h3>
-              <span class="book-author">Loan ID: {{ loan.loanId }}</span>
+
+        <div class="lib-book-list">
+          <div v-if="books.length === 0" class="lib-empty">No books in the catalog.</div>
+          <div v-for="book in books" :key="book.bookId" class="lib-book-row">
+
+            <!-- Icon -->
+            <div class="lib-book-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
             </div>
-            <div class="book-details">
-              <p><strong>Due Date:</strong> {{ loan.dueDate }}</p>
+
+            <!-- Book info -->
+            <div class="lib-book-info">
+              <div class="lib-book-title">{{ book.title }}</div>
+              <div class="lib-book-meta">
+                <span v-if="book.author">{{ book.author }}</span>
+                <span v-if="book.author && book.category"> · </span>
+                <span v-if="book.category">{{ book.category }}</span>
+              </div>
             </div>
-            <div class="book-actions">
-              <button class="btn btn-warning" @click="returnBook(loan.loanId)">
-                Return Book
+
+            <!-- Right: availability + action -->
+            <div class="lib-book-right">
+              <div class="lib-book-avail">
+                <template v-if="book.availableCopies !== undefined && book.totalCopies !== undefined">
+                  {{ book.availableCopies }}/{{ book.totalCopies }} available
+                </template>
+                <template v-else>
+                  {{ book.isAvailable ? 'Available' : 'Unavailable' }}
+                </template>
+              </div>
+
+              <!-- Return if student has this on loan -->
+              <button v-if="getLoan(book)" class="lib-btn lib-btn-return" @click="returnBook(getLoan(book).loanId)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 0 1 0 8h-1"/>
+                </svg>
+                Return
+              </button>
+              <!-- Borrow -->
+              <button v-else-if="book.isAvailable" class="lib-btn lib-btn-borrow" @click="borrowBook(book.bookId)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Borrow
+              </button>
+              <!-- Unavailable -->
+              <button v-else class="lib-btn lib-btn-unavail" disabled>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Unavailable
               </button>
             </div>
-          </div>
-        </div>
-        <hr class="section-divider" />
-      </div>
 
-      <h2>Available Books</h2>
-
-      <div v-if="books.length === 0" class="no-books">
-        <p>No books available in the library</p>
-      </div>
-
-      <div v-else class="books-list">
-        <div v-for="book in books" :key="book.bookId" class="book-card">
-          <div class="book-header">
-            <h3>{{ book.title }}</h3>
-            <span class="book-author">ID: {{ book.bookId }}</span>
-          </div>
-
-          <div class="book-details">
-            <p><strong>Status:</strong> <span class="status" :class="book.isAvailable ? 'available' : 'unavailable'">{{ book.isAvailable ? 'Available' : 'Unavailable' }}</span></p>
-          </div>
-
-          <div class="book-actions">
-            <button class="btn btn-primary" @click="borrowBook(book.bookId)"
-                    v-if="book.isAvailable">
-              Borrow
-            </button>
-            <button v-else class="btn btn-disabled" disabled>
-              Unavailable
-            </button>
           </div>
         </div>
       </div>
+
     </div>
-  </main>
+  </div>
 </template>
 
 <script>
@@ -80,153 +103,100 @@ export default {
     }
   },
   mounted() {
-    this.fetchBooks();
-    
-    // Listen for storage events in case login happens in App.vue in another tab
-    window.addEventListener('storage', this.handleStorageChange);
-    
-    // Also periodically check localStorage in case it changed in the same tab (since App.vue login doesn't emit global event)
-    this.storageInterval = setInterval(this.checkStorage, 1000);
+    this.fetchBooks()
+    window.addEventListener('storage', this.handleStorageChange)
+    this.storageInterval = setInterval(this.checkStorage, 1000)
   },
   beforeUnmount() {
-    window.removeEventListener('storage', this.handleStorageChange);
-    if (this.storageInterval) clearInterval(this.storageInterval);
+    window.removeEventListener('storage', this.handleStorageChange)
+    if (this.storageInterval) clearInterval(this.storageInterval)
   },
   methods: {
+    getLoan(book) {
+      return this.activeLoans.find(l =>
+        l.bookId === book.bookId || l.bookTitle === book.title
+      ) || null
+    },
     handleStorageChange(e) {
-      if (e.key === 'studentId') {
-        this.checkStorage();
-      }
+      if (e.key === 'studentId') this.checkStorage()
     },
     checkStorage() {
-      const currentStudentId = localStorage.getItem('studentId') || '';
-      if (this.studentId !== currentStudentId) {
-        this.studentId = currentStudentId;
-        if (this.studentId) {
-          this.fetchStudentLoans();
-        } else {
-          this.activeLoans = [];
-        }
+      const cur = localStorage.getItem('studentId') || ''
+      if (this.studentId !== cur) {
+        this.studentId = cur
+        if (cur) this.fetchStudentLoans()
+        else this.activeLoans = []
       }
     },
-    isValidUUID(value) {
-      return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    isValidUUID(v) {
+      return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
     },
-
     async fetchBooks() {
       try {
-        this.loading = true;
-        this.error = null;
-        
-        const response = await fetch('/api/library/books');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        this.books = data;
-        
-        if (this.studentId) {
-          await this.fetchStudentLoans();
-        }
-      } catch (error) {
-        this.error = error.message || 'Failed to load books';
-        console.error('Error fetching books:', error);
+        this.loading = true
+        this.error = null
+        const res = await fetch('/api/library/books')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        this.books = await res.json()
+        if (this.studentId) await this.fetchStudentLoans()
+      } catch (e) {
+        this.error = e.message || 'Failed to load books'
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
-
     async fetchStudentLoans() {
-      if (!this.studentId) return;
+      if (!this.studentId) return
       try {
-        const response = await fetch(`/api/library/loans/student/${this.studentId}`);
-        if (response.ok) {
-          const loans = await response.json();
-          // Filter only active loans (not returned yet)
-          this.activeLoans = loans.filter(loan => !loan.returnedAt);
+        const res = await fetch(`/api/library/loans/student/${this.studentId}`)
+        if (res.ok) {
+          const loans = await res.json()
+          this.activeLoans = loans.filter(l => !l.returnedAt)
         }
-      } catch (error) {
-        console.error('Error fetching student loans:', error);
-      }
+      } catch (e) {}
     },
-    
     async borrowBook(bookId) {
-      // Check if studentId is in localStorage
-      let studentId = localStorage.getItem('studentId');
-      
+      let studentId = localStorage.getItem('studentId')
       if (!studentId) {
-        // If not, prompt for it
-        const studentIdInput = prompt("Please enter your Student ID (UUID) to borrow this book:");
-        if (studentIdInput === null) return;
-        studentId = studentIdInput.trim();
-        
-        if (!studentId) {
-          alert('Please enter a student ID.');
-          return;
-        }
+        const input = prompt('Please enter your Student ID (UUID) to borrow this book:')
+        if (!input) return
+        studentId = input.trim()
       }
-
       if (!this.isValidUUID(studentId)) {
-        alert('Please provide a valid student ID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx). Please login with a valid UUID first, or enter it when prompted.');
-        return;
+        alert('Please provide a valid student UUID. Log in first or enter a valid ID.')
+        return
       }
-
       try {
-        const response = await fetch(`/api/library/books/${bookId}/borrow`, {
+        const res = await fetch(`/api/library/books/${bookId}/borrow`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentId })
-        });
-        
-        if (!response.ok) {
-          let errorMsg = `HTTP error! status: ${response.status}`;
-          try {
-            const errorData = await response.json();
-            if (errorData.message) errorMsg = errorData.message;
-          } catch(e) {
-            // response was not JSON
-          }
-          throw new Error(errorMsg);
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.message || `HTTP ${res.status}`)
         }
-        
-        alert('Book borrowed successfully!');
-        // Refresh the lists
-        this.fetchBooks();
-      } catch (error) {
-        alert('Failed to borrow book: ' + error.message);
-        console.error('Error borrowing book:', error);
+        alert('Book borrowed successfully!')
+        this.fetchBooks()
+      } catch (e) {
+        alert('Failed to borrow book: ' + e.message)
       }
     },
-
     async returnBook(loanId) {
-      if (!confirm('Are you sure you want to return this book?')) return;
-
+      if (!confirm('Return this book?')) return
       try {
-        const response = await fetch(`/api/library/loans/${loanId}/return`, {
+        const res = await fetch(`/api/library/loans/${loanId}/return`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          let errorMsg = `HTTP error! status: ${response.status}`;
-          try {
-            const errorData = await response.json();
-            if (errorData.message) errorMsg = errorData.message;
-          } catch(e) {}
-          throw new Error(errorMsg);
+          headers: { 'Content-Type': 'application/json' }
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.message || `HTTP ${res.status}`)
         }
-        
-        alert('Book returned successfully!');
-        this.fetchBooks(); // refresh books and loans
-      } catch (error) {
-        alert('Failed to return book: ' + error.message);
-        console.error('Error returning book:', error);
+        alert('Book returned successfully!')
+        this.fetchBooks()
+      } catch (e) {
+        alert('Failed to return book: ' + e.message)
       }
     }
   }
@@ -234,161 +204,62 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+.lib-page { min-height: 100vh; background: #fafafa; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+/* Header */
+.lib-header { background: #fff; border-bottom: 1px solid #f1f5f9; padding: 40px 0 32px; }
+.lib-header-inner { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+.lib-eyebrow { font-size: 11px; font-weight: 700; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 10px; }
+.lib-title { font-size: 36px; font-weight: 800; color: #0f172a; margin: 0 0 10px; letter-spacing: -0.5px; }
+.lib-sub { font-size: 14px; color: #64748b; line-height: 1.6; margin: 0; max-width: 480px; }
+
+/* Body */
+.lib-body { max-width: 900px; margin: 0 auto; padding: 32px; }
+
+.lib-state { padding: 48px; text-align: center; font-size: 14px; color: #94a3b8; }
+.lib-state--error { color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; }
+
+/* Card */
+.lib-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+.lib-card-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px 16px; border-bottom: 1px solid #f1f5f9; }
+.lib-card-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+.lib-card-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.lib-count { font-size: 12px; color: #94a3b8; font-weight: 500; }
+
+/* Book list */
+.lib-book-list { }
+.lib-empty { padding: 40px; text-align: center; font-size: 13px; color: #94a3b8; }
+
+.lib-book-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 24px; border-bottom: 1px solid #f8fafc;
+  transition: background 0.1s;
+}
+.lib-book-row:last-child { border-bottom: none; }
+.lib-book-row:hover { background: #f8fafc; }
+
+.lib-book-icon {
+  width: 36px; height: 36px; background: #f1f5f9; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #94a3b8; flex-shrink: 0;
 }
 
-h1 {
-  color: #333;
-  border-bottom: 3px solid #28a745;
-  padding-bottom: 10px;
-  margin-bottom: 30px;
-}
+.lib-book-info { flex: 1; min-width: 0; }
+.lib-book-title { font-size: 14px; font-weight: 600; color: #0f172a; }
+.lib-book-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-h2 {
-  color: #555;
-  margin-bottom: 20px;
-}
+.lib-book-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.lib-book-avail { font-size: 12px; color: #94a3b8; text-align: right; min-width: 80px; }
 
-.loading, .error {
-  text-align: center;
-  padding: 40px;
-  font-size: 16px;
+/* Buttons */
+.lib-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 7px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
 }
-
-.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  border-radius: 4px;
-}
-
-.books-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
-}
-
-.book-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
-}
-
-.book-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.book-header {
-  margin-bottom: 15px;
-}
-
-.book-header h3 {
-  margin: 0;
-  color: #28a745;
-  font-size: 18px;
-}
-
-.book-author {
-  color: #666;
-  font-style: italic;
-  font-size: 14px;
-  display: block;
-  margin-top: 5px;
-}
-
-.book-details {
-  margin-bottom: 15px;
-  line-height: 1.8;
-}
-
-.book-details p {
-  margin: 8px 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 12px;
-}
-
-.status.available {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.status.unavailable {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.book-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
-  flex: 1;
-  text-align: center;
-}
-
-.btn-primary {
-  background-color: #28a745;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #218838;
-}
-
-.btn-warning {
-  background-color: #ffc107;
-  color: #212529;
-}
-
-.btn-warning:hover {
-  background-color: #e0a800;
-}
-
-.btn-disabled {
-  background-color: #e9ecef;
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
-.no-books {
-  text-align: center;
-  padding: 40px;
-  color: #999;
-  font-style: italic;
-}
-
-.my-loans-section {
-  margin-bottom: 40px;
-}
-
-.my-loan-card {
-  border-left: 4px solid #ffc107;
-}
-
-.section-divider {
-  margin-top: 40px;
-  border: 0;
-  border-top: 1px solid #eee;
-}
+.lib-btn-borrow { background: #0f172a; color: #fff; }
+.lib-btn-borrow:hover { background: #1e293b; }
+.lib-btn-unavail { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
+.lib-btn-return { background: none; color: #475569; border: 1px solid #e2e8f0; }
+.lib-btn-return:hover { background: #f8fafc; border-color: #cbd5e1; }
 </style>

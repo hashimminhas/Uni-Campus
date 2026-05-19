@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="{ dark: darkMode }" @click="closeDropdown">
+  <div id="app" @click="closeDropdown">
     <header class="navbar" v-if="$route.path !== '/admin'">
       <div class="navbar-inner">
 
@@ -22,17 +22,11 @@
         <!-- Right side -->
         <div class="nav-right">
 
-          <!-- Dark mode toggle -->
-          <button class="icon-btn" @click.stop="darkMode = !darkMode" :title="darkMode ? 'Light mode' : 'Dark mode'">
-            <svg v-if="!darkMode" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          </button>
-
           <!-- Bell -->
           <div v-if="studentId" class="bell-wrap" @click.stop="toggleDropdown">
             <button class="icon-btn" title="Notifications">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              <span v-if="notifications.length > 0" class="notif-dot"></span>
+              <span v-if="notifications.length > 0" class="notif-count">{{ notifications.length }}</span>
             </button>
 
             <!-- Dropdown -->
@@ -50,11 +44,11 @@
                 <div v-if="notifications.length === 0" class="notif-empty">No notifications</div>
                 <div v-for="n in notifications" :key="n.notificationId" class="notif-item">
                   <span class="notif-bullet"></span>
-                  <div>
+                  <div style="flex:1">
                     <div class="notif-subject">{{ n.subject }}</div>
                     <div class="notif-body">{{ n.body }}</div>
-                    <div class="notif-time">{{ formatTime(n.sentAt) }}</div>
                   </div>
+                  <button class="notif-read-btn" @click.stop="markRead(n.notificationId)" title="Mark as read">✕</button>
                 </div>
               </div>
             </div>
@@ -89,8 +83,7 @@ export default {
       token: localStorage.getItem('token') || '',
       loginInput: '',
       notifications: [],
-      dropdownOpen: false,
-      darkMode: false
+      dropdownOpen: false
     }
   },
   computed: {
@@ -125,6 +118,7 @@ export default {
         localStorage.setItem('studentId', data.studentId)
         localStorage.setItem('studentName', this.studentName)
         localStorage.setItem('token', data.token)
+        window.dispatchEvent(new Event('storage'))
         this.loginInput = ''
         await this.fetchNotifications()
       } catch (e) { alert('Login failed: ' + e.message) }
@@ -134,6 +128,7 @@ export default {
       this.notifications = []; this.dropdownOpen = false
       localStorage.removeItem('studentId'); localStorage.removeItem('studentName')
       localStorage.removeItem('token')
+      window.dispatchEvent(new Event('storage'))
     },
     async fetchNotifications() {
       try {
@@ -146,13 +141,14 @@ export default {
     toggleDropdown() { this.dropdownOpen = !this.dropdownOpen; if (this.dropdownOpen) this.fetchNotifications() },
     closeDropdown() { this.dropdownOpen = false },
     clearNotifications() { this.notifications = []; this.dropdownOpen = false },
-    formatTime(t) {
-      if (!t) return ''
-      const d = Math.floor((Date.now() - new Date(t)) / 1000)
-      if (d < 60) return 'just now'
-      if (d < 3600) return Math.floor(d / 60) + 'm ago'
-      if (d < 86400) return Math.floor(d / 3600) + 'h ago'
-      return new Date(t).toLocaleDateString()
+    async markRead(id) {
+      try {
+        await fetch(`/api/notifications/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${this.token}` }
+        })
+      } catch (e) {}
+      this.notifications = this.notifications.filter(n => n.notificationId !== id)
     }
   }
 }
@@ -207,11 +203,12 @@ body { background: #fafafa; font-family: 'Segoe UI', system-ui, -apple-system, s
 }
 .icon-btn:hover { background: #f1f5f9; color: #0f172a; }
 
-/* Notification dot */
-.notif-dot {
-  position: absolute; top: 5px; right: 5px;
-  width: 6px; height: 6px; background: #3b82f6; border-radius: 50%;
-  border: 1.5px solid #fff;
+/* Notification count badge */
+.notif-count {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 16px; height: 16px; background: #ef4444; border-radius: 8px;
+  border: 1.5px solid #fff; font-size: 9px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: center; padding: 0 3px;
 }
 
 /* Bell wrap */
@@ -235,7 +232,8 @@ body { background: #fafafa; font-family: 'Segoe UI', system-ui, -apple-system, s
 .notif-bullet { width: 6px; height: 6px; background: #3b82f6; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 .notif-subject { font-size: 12px; font-weight: 600; color: #0f172a; }
 .notif-body { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.4; }
-.notif-time { font-size: 10px; color: #94a3b8; margin-top: 3px; }
+.notif-read-btn { background: none; border: none; color: #cbd5e1; cursor: pointer; font-size: 11px; padding: 2px 4px; border-radius: 4px; flex-shrink: 0; align-self: flex-start; }
+.notif-read-btn:hover { color: #ef4444; background: #fef2f2; }
 
 /* User chip */
 .user-chip { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 8px; border: 1px solid #e2e8f0; }
