@@ -17,7 +17,7 @@ import java.util.UUID;
  *  It does no logic itself; it just passes every request to StudentService and returns whatever comes back. */
 @RestController
 @RequestMapping("/students")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
 @Tag(name = "Student Service", description = "Central identity provider for UniCampus")
 public class StudentController {
 

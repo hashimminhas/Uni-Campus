@@ -219,6 +219,8 @@
 </template>
 
 <script>
+import { apiUrl } from '../api'
+
 export default {
   name: 'AdminView',
   data() {
@@ -262,7 +264,7 @@ export default {
     async adminLogin() {
       this.loginError = ''; this.loginLoading = true
       try {
-        const res = await fetch('/api/students/auth/admin', {
+        const res = await fetch(apiUrl('/api/students/auth/admin'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.creds)
@@ -296,7 +298,7 @@ export default {
     async fetchStudents() {
       this.loading = true
       try {
-        const res = await fetch('/api/students', {
+        const res = await fetch(apiUrl('/api/students'), {
           headers: { 'Authorization': `Bearer ${this.adminToken}` }
         })
         this.students = res.ok ? await res.json() : []
@@ -306,7 +308,7 @@ export default {
     async updateStatus(student, newStatus) {
       this.updating = { ...this.updating, [student.studentId]: true }
       try {
-        const res = await fetch(`/api/students/${student.studentId}/status`, {
+        const res = await fetch(apiUrl(`/api/students/${student.studentId}/status`), {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -336,7 +338,7 @@ export default {
     async fetchBooks() {
       this.booksLoading = true;
       try {
-        const res = await fetch('/api/library/books');
+        const res = await fetch(apiUrl('/api/library/books'));
         if (res.ok) {
           this.books = await res.json();
         }
@@ -352,7 +354,7 @@ export default {
       this.bookMessage = '';
       this.bookMessageError = false;
       try {
-        const res = await fetch('/api/library/books', {
+        const res = await fetch(apiUrl('/api/library/books'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -379,7 +381,7 @@ export default {
       this.catalogUpdating = { ...this.catalogUpdating, [book.bookId]: true };
       try {
         const updatedStatus = !book.isAvailable;
-        const res = await fetch(`/api/library/books/${book.bookId}`, {
+        const res = await fetch(apiUrl(`/api/library/books/${book.bookId}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

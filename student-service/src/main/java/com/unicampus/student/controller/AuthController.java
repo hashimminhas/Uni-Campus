@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/students/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
 @Tag(name = "Auth", description = "Login and receive a JWT token")
 @RequiredArgsConstructor
 public class AuthController {

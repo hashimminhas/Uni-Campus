@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/library")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
 @RequiredArgsConstructor
 @Tag(name = "Library", description = "Library Service APIs")
 public class LibraryController {

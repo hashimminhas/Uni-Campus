@@ -58,6 +58,18 @@ services:
       postgres:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://127.0.0.1:8080
+    container_name: unicampus-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      api-gateway:
+        condition: service_started
+
   student-service:
     build: ./student-service
     container_name: unicampus-student-service

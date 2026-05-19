@@ -221,6 +221,8 @@
 </template>
 
 <script>
+import { apiUrl } from '../api'
+
 export default {
   name: 'BillingView',
   data() {
@@ -287,8 +289,8 @@ export default {
         }
 
         const [statusRes, chargesRes] = await Promise.all([
-          fetch(`/api/billing/${this.studentId}/status`, { headers }),
-          fetch(`/api/billing/${this.studentId}/charges`, { headers })
+          fetch(apiUrl(`/api/billing/${this.studentId}/status`), { headers }),
+          fetch(apiUrl(`/api/billing/${this.studentId}/charges`), { headers })
         ]);
 
         if (statusRes.ok) {
@@ -327,7 +329,7 @@ export default {
           headers['Authorization'] = `Bearer ${this.token}`;
         }
 
-        const response = await fetch(`/api/billing/${this.studentId}/tuition`, {
+        const response = await fetch(apiUrl(`/api/billing/${this.studentId}/tuition`), {
           method: 'POST',
           headers
         });
@@ -367,7 +369,7 @@ export default {
           headers['Authorization'] = `Bearer ${this.token}`;
         }
 
-        const response = await fetch(`/api/billing/${this.studentId}/pay`, {
+        const response = await fetch(apiUrl(`/api/billing/${this.studentId}/pay`), {
           method: 'POST',
           headers,
           body: JSON.stringify(this.payForm)

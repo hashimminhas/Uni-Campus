@@ -65,6 +65,8 @@
 </template>
 
 <script>
+import { apiUrl } from '../api'
+
 export default {
   name: 'HomeView',
   data() {
@@ -96,7 +98,7 @@ export default {
       try {
         this.loading = true
         this.error = null
-        const res = await fetch('/api/courses')
+        const res = await fetch(apiUrl('/api/courses'))
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         this.courses = await res.json()
         await this.fetchEnrolledCourses()
@@ -110,7 +112,7 @@ export default {
       const studentId = localStorage.getItem('studentId')
       if (!studentId) { this.enrolledCourseIds = []; return }
       try {
-        const res = await fetch(`/api/courses/student/${studentId}`, {
+        const res = await fetch(apiUrl(`/api/courses/student/${studentId}`), {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
         if (res.ok) {
@@ -124,7 +126,7 @@ export default {
       if (!studentId) return
       if (!confirm('Are you sure you want to drop this course?')) return
       try {
-        const res = await fetch(`/api/courses/${courseId}/enroll/${studentId}`, {
+        const res = await fetch(apiUrl(`/api/courses/${courseId}/enroll/${studentId}`), {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
@@ -141,7 +143,7 @@ export default {
       const studentId = localStorage.getItem('studentId')
       if (!studentId) { alert('Please log in first to enrol in a course.'); return }
       try {
-        const res = await fetch(`/api/courses/${courseId}/enroll`, {
+        const res = await fetch(apiUrl(`/api/courses/${courseId}/enroll`), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

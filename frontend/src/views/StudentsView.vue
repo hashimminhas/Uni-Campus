@@ -154,6 +154,8 @@
 </template>
 
 <script>
+import { apiUrl } from '../api'
+
 export default {
   name: 'StudentsView',
   data() {
@@ -207,7 +209,7 @@ export default {
     },
     async fetchProfile() {
       try {
-        const res = await fetch(`/api/students/${this.studentId}`)
+        const res = await fetch(apiUrl(`/api/students/${this.studentId}`))
         if (res.ok) this.profile = await res.json()
       } catch (e) {}
     },
@@ -241,7 +243,7 @@ export default {
           enrollmentYear: this.form.enrollmentYear,
           phoneNumber: this.form.phoneNumber.trim() || null
         }
-        const res = await fetch('/api/students', {
+        const res = await fetch(apiUrl('/api/students'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -253,7 +255,7 @@ export default {
         const student = await res.json()
 
         // Auto-login with the new studentId
-        const loginRes = await fetch('/api/students/auth/login', {
+        const loginRes = await fetch(apiUrl('/api/students/auth/login'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentId: student.studentId })

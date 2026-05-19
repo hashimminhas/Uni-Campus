@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/billing")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
 @RequiredArgsConstructor
 @Tag(name = "Billing", description = "Billing Service APIs")
 public class BillingController {

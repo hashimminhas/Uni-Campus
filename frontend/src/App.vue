@@ -73,6 +73,8 @@
 </template>
 
 <script>
+import { apiUrl } from './api'
+
 export default {
   name: 'App',
   data() {
@@ -104,7 +106,7 @@ export default {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
       if (!uuidRegex.test(inputId)) { alert('Please enter a valid UUID.'); return }
       try {
-        const res = await fetch('/api/students/auth/login', {
+        const res = await fetch(apiUrl('/api/students/auth/login'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentId: inputId })
@@ -131,7 +133,7 @@ export default {
     },
     async fetchNotifications() {
       try {
-        const res = await fetch(`/api/notifications/student/${this.studentId}`, {
+        const res = await fetch(apiUrl(`/api/notifications/student/${this.studentId}`), {
           headers: { 'Authorization': `Bearer ${this.token}` }
         })
         if (res.ok) this.notifications = await res.json()
@@ -142,7 +144,7 @@ export default {
     clearNotifications() { this.notifications = []; this.dropdownOpen = false },
     async markRead(id) {
       try {
-        await fetch(`/api/notifications/${id}`, {
+        await fetch(apiUrl(`/api/notifications/${id}`), {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${this.token}` }
         })

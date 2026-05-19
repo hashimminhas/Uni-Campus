@@ -24,7 +24,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/notifications")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
 @Tag(name = "Notifications", description = "Send and track notification delivery")
 public class NotificationController {
 

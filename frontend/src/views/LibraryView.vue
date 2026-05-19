@@ -91,6 +91,8 @@
 </template>
 
 <script>
+import { apiUrl } from '../api'
+
 export default {
   name: 'LibraryView',
   data() {
@@ -135,7 +137,7 @@ export default {
       try {
         this.loading = true
         this.error = null
-        const res = await fetch('/api/library/books')
+        const res = await fetch(apiUrl('/api/library/books'))
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         this.books = await res.json()
         if (this.studentId) await this.fetchStudentLoans()
@@ -148,7 +150,7 @@ export default {
     async fetchStudentLoans() {
       if (!this.studentId) return
       try {
-        const res = await fetch(`/api/library/loans/student/${this.studentId}`)
+        const res = await fetch(apiUrl(`/api/library/loans/student/${this.studentId}`))
         if (res.ok) {
           const loans = await res.json()
           this.activeLoans = loans.filter(l => !l.returnedAt)
@@ -167,7 +169,7 @@ export default {
         return
       }
       try {
-        const res = await fetch(`/api/library/books/${bookId}/borrow`, {
+        const res = await fetch(apiUrl(`/api/library/books/${bookId}/borrow`), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentId })
@@ -185,7 +187,7 @@ export default {
     async returnBook(loanId) {
       if (!confirm('Return this book?')) return
       try {
-        const res = await fetch(`/api/library/loans/${loanId}/return`, {
+        const res = await fetch(apiUrl(`/api/library/loans/${loanId}/return`), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' }
         })

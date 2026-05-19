@@ -70,6 +70,8 @@
 </template>
 
 <script>
+import { apiUrl } from '../api'
+
 export default {
   name: 'ExamView',
   data() {
@@ -107,10 +109,10 @@ export default {
         this.loading = true
         this.error = null
         const [examRes, courseRes] = await Promise.all([
-          fetch(`/api/exams/student/${this.studentId}`, {
+          fetch(apiUrl(`/api/exams/student/${this.studentId}`), {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
           }),
-          fetch('/api/courses')
+          fetch(apiUrl('/api/courses'))
         ])
         if (examRes.ok) this.exams = await examRes.json()
         if (courseRes.ok) this.courses = await courseRes.json()
