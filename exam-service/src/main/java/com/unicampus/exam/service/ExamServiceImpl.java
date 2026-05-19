@@ -153,7 +153,7 @@ public class ExamServiceImpl implements ExamService {
 
     private List<UUID> getStudentEnrolledCourses(String studentId) {
         try {
-            String url = courseServiceBaseUrl + "/students/" + studentId + "/courses";
+            String url = courseServiceBaseUrl + "/courses/student/" + studentId;
             @SuppressWarnings("unchecked")
             List<UUID> courses = restClient.get()
                     .uri(url)

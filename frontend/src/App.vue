@@ -15,6 +15,7 @@
           <router-link to="/courses"  active-class="nav-active">Courses</router-link>
           <router-link to="/library"  active-class="nav-active">Library</router-link>
           <router-link to="/billing"  active-class="nav-active">Billing</router-link>
+          <router-link to="/exam"     active-class="nav-active">Exams</router-link>
         </nav>
 
         <!-- Right side -->

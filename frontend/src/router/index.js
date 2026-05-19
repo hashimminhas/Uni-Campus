@@ -5,6 +5,7 @@ import LibraryView from '../views/LibraryView.vue'
 import AdminView from '../views/AdminView.vue'
 import StudentsView from '../views/StudentsView.vue'
 import BillingView from '../views/BillingView.vue'
+import ExamView from '../views/ExamView.vue'
 
 const routes = [
   { path: '/',         name: 'home',          component: LandingView },
@@ -12,6 +13,7 @@ const routes = [
   { path: '/courses',  name: 'courses',        component: HomeView },
   { path: '/library',  name: 'library',        component: LibraryView },
   { path: '/billing',  name: 'billing',        component: BillingView },
+  { path: '/exam',     name: 'exam',           component: ExamView },
   { path: '/admin',    name: 'admin',          component: AdminView },
 ]
 

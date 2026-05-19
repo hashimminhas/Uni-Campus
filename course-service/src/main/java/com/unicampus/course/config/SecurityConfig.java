@@ -39,7 +39,7 @@ public class SecurityConfig {
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // Allow unauthenticated GET access to list/get courses for internal validation
-                    .requestMatchers(HttpMethod.GET, "/courses", "/courses/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/courses", "/courses/*", "/courses/student/**").permitAll()
                     .requestMatchers("/courses").hasAnyRole("STUDENT", "ADMIN", "TEACHER")
                     .anyRequest().authenticated()
                 )

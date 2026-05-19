@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/students")
+@RequestMapping("/exams")
 @RequiredArgsConstructor
 @Tag(name = "Student Exam Management", description = "REST APIs for student exam operations")
 public class StudentExamController {
 
     private final ExamService examService;
 
-    @GetMapping("/{studentId}/exams")
+    @GetMapping("/student/{studentId}")
     @Operation(summary = "Get exam schedules for a student's enrolled courses", description = "R10, R11: Student views their exams")
     public ResponseEntity<List<ExamResponse>> getStudentExams(@PathVariable String studentId) {
         return ResponseEntity.ok(examService.getExamsForStudent(studentId));
