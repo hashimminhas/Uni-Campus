@@ -53,7 +53,7 @@ public class DormitoryControllerTest {
         when(dormitoryService.assignRoom(eq(roomId), eq(studentId), eq(semester)))
                 .thenReturn(mockAssignment);
 
-        mockMvc.perform(post("/api/dormitory/rooms/{roomId}/assign", roomId)
+        mockMvc.perform(post("/dormitory/rooms/{roomId}/assign", roomId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ public class DormitoryControllerTest {
         when(dormitoryService.assignRoom(eq(roomId), eq(studentId), eq(semester)))
                 .thenThrow(new IllegalArgumentException("Student is not active or does not exist"));
 
-        mockMvc.perform(post("/api/dormitory/rooms/{roomId}/assign", roomId)
+        mockMvc.perform(post("/dormitory/rooms/{roomId}/assign", roomId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -97,7 +97,7 @@ public class DormitoryControllerTest {
         when(dormitoryService.assignRoom(eq(roomId), eq(studentId), eq(semester)))
                 .thenThrow(new IllegalStateException("Room is not available or at full capacity"));
 
-        mockMvc.perform(post("/api/dormitory/rooms/{roomId}/assign", roomId)
+        mockMvc.perform(post("/dormitory/rooms/{roomId}/assign", roomId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())

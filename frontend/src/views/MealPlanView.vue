@@ -1,80 +1,108 @@
 <template>
-  <main class="container">
-    <div class="hero">
-      <h1>University Meal Plans</h1>
-      <p>Fuel your studies with our flexible dining options.</p>
+  <div class="page">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+      <div class="breadcrumb-inner">
+        <router-link to="/" class="bc-link">Home</router-link>
+        <span class="bc-sep">/</span>
+        <span class="bc-current">Meal Plan</span>
+      </div>
     </div>
 
-    <!-- Student Subscription Section -->
-    <section v-if="studentId" class="subscription-section">
-      <div class="section-header">
-        <h2>My Meal Plan</h2>
-        <span class="badge" :class="isEligible ? 'eligible' : 'ineligible'">
-          {{ isEligible ? 'Eligible to Subscribe' : 'Subscription Active' }}
-        </span>
-      </div>
+    <div class="page-top">
+      <h1 class="page-title">University Meal Plans</h1>
+      <p class="page-sub">Fuel your studies with our flexible dining options.</p>
+    </div>
 
-      <div v-if="loadingSub" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading your subscription...</p>
-      </div>
+    <div class="content">
+      <!-- Student Subscription Section -->
+      <div v-if="studentId" class="profile-card" style="margin-bottom: 24px;">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          </div>
+          <div>
+            <div class="profile-name">My Meal Plan</div>
+            <div class="profile-sub">Your current dining subscription details</div>
+          </div>
+          <span class="badge" :class="isEligible ? 'badge--graduated' : 'badge--active'" style="margin-left:auto">
+            <span class="badge-dot"></span>{{ isEligible ? 'Eligible to Subscribe' : 'Subscription Active' }}
+          </span>
+        </div>
 
-      <div v-else-if="activeSubscription" class="active-sub-card">
-        <div class="card-content">
-          <div class="plan-header">
-            <div class="plan-name">{{ activeSubscription.planName }}</div>
-            <div class="status-pill active">ACTIVE</div>
+        <div v-if="loadingSub" class="profile-loading">
+          Loading your subscription...
+        </div>
+        <div v-else-if="activeSubscription" class="room-assignments-grid" style="grid-template-columns: 1fr;">
+          <div class="room-assignment-item">
+            <div class="assignment-top">
+              <div class="assignment-room">{{ activeSubscription.planName }}</div>
+              <button @click="cancelSubscription(activeSubscription.subscriptionId)" class="cancel-btn" :disabled="processing" style="padding: 4px 8px; font-size: 11px;">
+                {{ processing ? 'Processing...' : 'Cancel Subscription' }}
+              </button>
+            </div>
+            <div class="assignment-details">
+              <div class="pf">
+                <div class="pf-label">SUBSCRIBED ON</div>
+                <div class="pf-val">{{ formatDate(activeSubscription.startDate) }}</div>
+              </div>
+              <div class="pf">
+                <div class="pf-label">STUDENT ID</div>
+                <div class="pf-val mono">{{ activeSubscription.studentId }}</div>
+              </div>
+            </div>
           </div>
-          <div class="sub-details">
-            <p><span>Subscribed On:</span> {{ formatDate(activeSubscription.startDate) }}</p>
-            <p><span>Student ID:</span> {{ activeSubscription.studentId }}</p>
-          </div>
-          <button @click="cancelSubscription(activeSubscription.subscriptionId)" class="btn-cancel" :disabled="processing">
-            {{ processing ? 'Processing...' : 'Cancel Subscription' }}
-          </button>
+        </div>
+        <div v-else class="empty-state">
+          You are not currently subscribed to any meal plan.
         </div>
       </div>
 
-      <div v-else class="empty-state">
-        <p>You are not currently subscribed to any meal plan.</p>
-      </div>
-    </section>
-
-    <!-- Plans Catalog Section -->
-    <section class="catalog-section">
-      <div class="section-header">
-        <h2>Available Plans</h2>
+      <!-- Not logged in prompt -->
+      <div v-if="!studentId" class="not-logged-in" style="margin-bottom: 24px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        <div class="not-logged-in-title">You are not logged in</div>
+        <div class="not-logged-in-sub">Log in with your student UUID from the top-right corner to manage your meal plan.</div>
       </div>
 
-      <div v-if="loadingPlans" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading available plans...</p>
+      <!-- Plans Catalog Section -->
+      <div class="section-title">Available Plans</div>
+      
+      <div v-if="loadingPlans" class="empty-state">
+        <span class="spinner"></span> Loading available plans...
       </div>
-
-      <div v-else class="plans-grid">
-        <div v-for="plan in plans" :key="plan.planId" class="plan-card">
-          <div class="plan-info">
-            <h3>{{ plan.name }}</h3>
-            <div class="meals-badge">{{ plan.mealsPerWeek }} Meals / Week</div>
-            <p class="price">${{ plan.price }} <small>/ semester</small></p>
-            <p class="semester">Valid for: {{ plan.semester }}</p>
+      <div v-else class="rooms-grid">
+        <div v-for="plan in plans" :key="plan.planId" class="room-card">
+          <div class="room-header">
+            <div class="room-type">{{ plan.mealsPerWeek }} MEALS / WEEK</div>
+            <div class="room-price">${{ plan.price }} <span style="font-size:10px; font-weight:normal; color:#94a3b8;">/ SEM</span></div>
           </div>
-          <div class="plan-actions">
+          <div class="room-body">
+            <h3 class="room-number-lg">{{ plan.name }}</h3>
+            <div class="occupancy-wrap">
+              <div class="occupancy-labels">
+                <span>Valid for</span>
+                <span>{{ plan.semester }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="room-footer">
             <button 
               v-if="isEligible && studentId" 
               @click="subscribe(plan)" 
-              class="btn-subscribe"
+              class="submit-btn" style="width: 100%; justify-content: center;"
               :disabled="processing"
             >
               {{ processing ? 'Processing...' : 'Subscribe Now' }}
             </button>
-            <button v-else-if="!studentId" class="btn-disabled" disabled>Login to Subscribe</button>
-            <button v-else class="btn-disabled" disabled>Already Subscribed</button>
+            <button v-else-if="!studentId" class="submit-btn" style="width: 100%; justify-content: center;" disabled>Login to Subscribe</button>
+            <button v-else class="submit-btn" style="width: 100%; justify-content: center;" disabled>Already Subscribed</button>
           </div>
         </div>
       </div>
-    </section>
-  </main>
+
+    </div>
+  </div>
 </template>
 
 <script>
@@ -204,188 +232,76 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  font-family: 'Inter', sans-serif;
-  color: #2d3436;
-}
+.page { min-height: 100vh; background: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
 
-.hero {
-  text-align: center;
-  margin-bottom: 60px;
-}
+.breadcrumb-bar { background: #fff; border-bottom: 1px solid #f1f5f9; }
+.breadcrumb-inner { max-width: 860px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 6px; }
+.bc-link { font-size: 12px; color: #94a3b8; text-decoration: none; }
+.bc-link:hover { color: #64748b; }
+.bc-sep { font-size: 12px; color: #cbd5e1; }
+.bc-current { font-size: 12px; color: #475569; font-weight: 500; }
 
-.hero h1 {
-  font-size: 3rem;
-  font-weight: 800;
-  color: #d35400; /* Burnt Orange theme */
-  margin-bottom: 10px;
-}
+.page-top { max-width: 860px; margin: 0 auto; padding: 28px 28px 0; }
+.page-title { font-size: 26px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+.page-sub { font-size: 14px; color: #64748b; margin: 0; }
 
-.hero p {
-  font-size: 1.2rem;
-  color: #636e72;
-}
+.content { max-width: 860px; margin: 0 auto; padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 16px; }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  border-bottom: 2px solid #f1f2f6;
-  padding-bottom: 10px;
-}
+/* My Profile / Subscription */
+.profile-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; }
+.profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.profile-avatar { width: 44px; height: 44px; background: #0f172a; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-name { font-size: 16px; font-weight: 700; color: #0f172a; }
+.profile-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.profile-loading { font-size: 13px; color: #94a3b8; padding: 8px 0; }
 
-.section-header h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-}
+.room-assignments-grid { display: grid; gap: 16px; }
+.room-assignment-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; transition: background 0.15s; }
+.room-assignment-item:hover { background: #f1f5f9; }
+.assignment-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.assignment-room { font-size: 16px; font-weight: 700; color: #0f172a; }
 
-.badge {
-  padding: 6px 15px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
+.assignment-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pf { display: flex; flex-direction: column; gap: 3px; }
+.pf-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.8px; }
+.pf-val { font-size: 13px; color: #0f172a; }
+.pf-val.mono { font-family: monospace; font-size: 11px; word-break: break-all; }
 
-.badge.eligible { background: #e3fcef; color: #00b894; }
-.badge.ineligible { background: #fff5f5; color: #ff7675; }
+/* Not logged in */
+.not-logged-in { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #94a3b8; }
+.not-logged-in-title { font-size: 15px; font-weight: 600; color: #475569; }
+.not-logged-in-sub { font-size: 13px; color: #94a3b8; text-align: center; max-width: 360px; line-height: 1.5; }
 
-.active-sub-card {
-  background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 10px 25px rgba(211, 84, 0, 0.1);
-  border-left: 5px solid #d35400;
-  margin-bottom: 40px;
-}
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.badge--active    { background: #f0fdf4; color: #16a34a; } .badge--active    .badge-dot { background: #16a34a; }
+.badge--graduated { background: #f1f5f9; color: #64748b; } .badge--graduated .badge-dot { background: #94a3b8; }
+.badge--suspended { background: #fef2f2; color: #dc2626; } .badge--suspended .badge-dot { background: #dc2626; }
 
-.plan-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+/* Buttons */
+.cancel-btn { padding: 9px 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; color: #64748b; cursor: pointer; }
+.cancel-btn:hover:not(:disabled) { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
+.cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 22px; background: #0f172a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.submit-btn:hover:not(:disabled) { background: #1e293b; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #64748b; }
 
-.plan-name {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d3436;
-}
+/* Rooms/Plans */
+.section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 10px 0 0; }
+.rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.room-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.15s, transform 0.15s; }
+.room-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
+.room-header { padding: 16px 16px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8fafc; }
+.room-type { font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.room-price { font-size: 15px; font-weight: 700; color: #0f172a; }
+.room-body { padding: 16px; flex-grow: 1; }
+.room-number-lg { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px; }
+.occupancy-wrap { display: flex; flex-direction: column; gap: 6px; }
+.occupancy-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.room-footer { padding: 0 16px 16px; }
 
-.status-pill {
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-
-.status-pill.active { background: #d35400; color: white; }
-
-.sub-details p {
-  margin: 10px 0;
-  color: #636e72;
-}
-
-.sub-details span { font-weight: 600; color: #2d3436; }
-
-.btn-cancel {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: transparent;
-  border: 1px solid #ff7675;
-  color: #ff7675;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.btn-cancel:hover { background: #fff5f5; }
-
-.plans-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-}
-
-.plan-card {
-  background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease;
-}
-
-.plan-card:hover { transform: translateY(-5px); }
-
-.meals-badge {
-  display: inline-block;
-  background: #f1f2f6;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #636e72;
-  margin-bottom: 15px;
-}
-
-.price {
-  font-size: 2rem;
-  font-weight: 800;
-  margin: 10px 0;
-}
-
-.price small { font-size: 0.9rem; color: #b2bec3; font-weight: 400; }
-
-.semester { font-size: 0.9rem; color: #636e72; margin-bottom: 25px; }
-
-.btn-subscribe {
-  width: 100%;
-  padding: 14px;
-  background: #d35400;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-subscribe:hover { background: #e67e22; }
-
-.btn-disabled {
-  width: 100%;
-  padding: 14px;
-  background: #f1f2f6;
-  color: #b2bec3;
-  border: none;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: not-allowed;
-}
-
-.loading-state, .empty-state {
-  text-align: center;
-  padding: 40px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  color: #b2bec3;
-}
-
-.spinner {
-  width: 30px;
-  height: 30px;
-  border: 3px solid rgba(211, 84, 0, 0.1);
-  border-left-color: #d35400;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
-}
-
+.empty-state { text-align: center; padding: 30px; font-size: 13px; color: #94a3b8; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+.spinner { width: 13px; height: 13px; border: 2px solid rgba(0,0,0,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>

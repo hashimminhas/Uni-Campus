@@ -1,86 +1,112 @@
 <template>
-  <main class="container">
-    <div class="hero">
-      <h1>Campus Dormitories</h1>
-      <p>Find your home away from home.</p>
+  <div class="page">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb-bar">
+      <div class="breadcrumb-inner">
+        <router-link to="/" class="bc-link">Home</router-link>
+        <span class="bc-sep">/</span>
+        <span class="bc-current">Dormitory</span>
+      </div>
     </div>
 
-    <!-- Student Assignments Section -->
-    <section v-if="studentId" class="assignments-section">
-      <div class="section-header">
-        <h2>My Room Assignments</h2>
-        <span class="badge" :class="eligibility ? 'eligible' : 'ineligible'">
-          {{ eligibility ? 'Eligible for Housing' : 'Not Eligible' }}
-        </span>
-      </div>
+    <div class="page-top">
+      <h1 class="page-title">Campus Dormitories</h1>
+      <p class="page-sub">Find your home away from home and manage your housing assignments.</p>
+    </div>
 
-      <div v-if="assignmentsLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading your assignments...</p>
-      </div>
+    <div class="content">
+      <!-- Student Assignments Section -->
+      <div v-if="studentId" class="profile-card" style="margin-bottom: 24px;">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </div>
+          <div>
+            <div class="profile-name">My Room Assignments</div>
+            <div class="profile-sub">Your current housing details</div>
+          </div>
+          <span class="badge" :class="eligibility ? 'badge--active' : 'badge--suspended'" style="margin-left:auto">
+            <span class="badge-dot"></span>{{ eligibility ? 'Eligible for Housing' : 'Not Eligible' }}
+          </span>
+        </div>
 
-      <div v-else-if="myAssignments.length > 0" class="assignments-grid">
-        <div v-for="assignment in myAssignments" :key="assignment.assignmentId" class="assignment-card">
-          <div class="card-glow"></div>
-          <div class="card-content">
-            <div class="room-number">Room {{ assignment.roomNumber }}</div>
-            <div class="assignment-details">
-              <p><span>Semester:</span> {{ assignment.semester }}</p>
-              <p><span>Assigned Date:</span> {{ formatDate(assignment.assignedAt) }}</p>
+        <div v-if="assignmentsLoading" class="profile-loading">
+          Loading your assignments...
+        </div>
+        <div v-else-if="myAssignments.length > 0" class="room-assignments-grid">
+          <div v-for="assignment in myAssignments" :key="assignment.assignmentId" class="room-assignment-item">
+            <div class="assignment-top">
+              <div class="assignment-room">Room {{ assignment.roomNumber }}</div>
+              <button @click="removeAssignment(assignment.assignmentId)" class="cancel-btn" :disabled="actionLoading" style="padding: 4px 8px; font-size: 11px;">
+                Cancel
+              </button>
             </div>
-            <button @click="removeAssignment(assignment.assignmentId)" class="btn-cancel" :disabled="actionLoading">
-              Cancel Assignment
-            </button>
+            <div class="assignment-details">
+              <div class="pf">
+                <div class="pf-label">SEMESTER</div>
+                <div class="pf-val">{{ assignment.semester }}</div>
+              </div>
+              <div class="pf">
+                <div class="pf-label">ASSIGNED DATE</div>
+                <div class="pf-val">{{ formatDate(assignment.assignedAt) }}</div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div v-else class="empty-state">
-        <p>You don't have any room assignments yet.</p>
-      </div>
-    </section>
-
-    <!-- Available Rooms Section -->
-    <section class="rooms-section">
-      <div class="section-header">
-        <h2>Available Rooms</h2>
-        <div class="filters">
-          <!-- Optional filters could go here -->
+        <div v-else class="empty-state">
+          You don't have any room assignments yet.
         </div>
       </div>
 
-      <div v-if="roomsLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading available rooms...</p>
+      <!-- Not logged in prompt -->
+      <div v-if="!studentId" class="not-logged-in" style="margin-bottom: 24px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <div class="not-logged-in-title">You are not logged in</div>
+        <div class="not-logged-in-sub">Log in with your student UUID from the top-right corner to manage your housing assignments.</div>
       </div>
 
+      <!-- Available Rooms Section -->
+      <div class="section-title">Available Rooms</div>
+      
+      <div v-if="roomsLoading" class="empty-state">
+        <span class="spinner"></span> Loading available rooms...
+      </div>
       <div v-else class="rooms-grid">
         <div v-for="room in rooms" :key="room.roomId" class="room-card" :class="{ 'full': room.currentOccupancy >= room.capacity }">
-          <div class="room-type">{{ room.type }}</div>
-          <div class="room-info">
-            <h3>Room {{ room.roomNumber }}</h3>
-            <div class="occupancy-bar">
-              <div class="bar-fill" :style="{ width: (room.currentOccupancy / room.capacity * 100) + '%' }"></div>
-            </div>
-            <p class="occupancy-text">{{ room.currentOccupancy }} / {{ room.capacity }} beds occupied</p>
-            <p class="price">${{ room.pricePerSemester }} <small>/ semester</small></p>
+          <div class="room-header">
+            <div class="room-type">{{ room.type }}</div>
+            <div class="room-price">${{ room.pricePerSemester }} <span style="font-size:10px; font-weight:normal; color:#94a3b8;">/ SEM</span></div>
           </div>
-          <div class="room-actions">
+          <div class="room-body">
+            <h3 class="room-number-lg">Room {{ room.roomNumber }}</h3>
+            <div class="occupancy-wrap">
+              <div class="occupancy-labels">
+                <span>Occupancy</span>
+                <span>{{ room.currentOccupancy }} / {{ room.capacity }}</span>
+              </div>
+              <div class="occupancy-bar">
+                <div class="bar-fill" :style="{ width: (room.currentOccupancy / room.capacity * 100) + '%' }"></div>
+              </div>
+            </div>
+          </div>
+          <div class="room-footer">
             <button 
-              v-if="room.currentOccupancy < room.capacity && eligibility" 
+              v-if="room.currentOccupancy < room.capacity && eligibility && studentId" 
               @click="assignRoom(room)" 
-              class="btn-assign"
+              class="submit-btn" style="width: 100%; justify-content: center;"
               :disabled="actionLoading"
             >
               {{ actionLoading ? 'Processing...' : 'Assign Me' }}
             </button>
-            <button v-else-if="!eligibility" class="btn-disabled" disabled>Not Eligible</button>
-            <button v-else class="btn-full" disabled>Room Full</button>
+            <button v-else-if="!studentId" class="submit-btn" style="width: 100%; justify-content: center;" disabled>Log In First</button>
+            <button v-else-if="!eligibility" class="submit-btn" style="width: 100%; justify-content: center;" disabled>Not Eligible</button>
+            <button v-else class="submit-btn" style="width: 100%; justify-content: center;" disabled>Room Full</button>
           </div>
         </div>
       </div>
-    </section>
-  </main>
+
+    </div>
+  </div>
 </template>
 
 <script>
@@ -168,7 +194,7 @@ export default {
         return;
       }
       
-      const semester = prompt('Enter semester (e.g., Fall 2024):', 'Fall 2024');
+      const semester = prompt('Enter semester (e.g., Fall 2026):', 'Fall 2026');
       if (!semester) return;
 
       this.actionLoading = true;
@@ -227,270 +253,77 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #2d3436;
-}
+.page { min-height: 100vh; background: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
 
-.hero {
-  text-align: center;
-  margin-bottom: 60px;
-}
+.breadcrumb-bar { background: #fff; border-bottom: 1px solid #f1f5f9; }
+.breadcrumb-inner { max-width: 860px; margin: 0 auto; padding: 10px 28px; display: flex; align-items: center; gap: 6px; }
+.bc-link { font-size: 12px; color: #94a3b8; text-decoration: none; }
+.bc-link:hover { color: #64748b; }
+.bc-sep { font-size: 12px; color: #cbd5e1; }
+.bc-current { font-size: 12px; color: #475569; font-weight: 500; }
 
-.hero h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 10px;
-}
+.page-top { max-width: 860px; margin: 0 auto; padding: 28px 28px 0; }
+.page-title { font-size: 26px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+.page-sub { font-size: 14px; color: #64748b; margin: 0; }
 
-.hero p {
-  font-size: 1.2rem;
-  color: #636e72;
-}
+.content { max-width: 860px; margin: 0 auto; padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 16px; }
 
-section {
-  margin-bottom: 50px;
-}
+/* My Profile / Assignments */
+.profile-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px; }
+.profile-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.profile-avatar { width: 44px; height: 44px; background: #0f172a; color: #fff; border-radius: 8px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-name { font-size: 16px; font-weight: 700; color: #0f172a; }
+.profile-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.profile-loading { font-size: 13px; color: #94a3b8; padding: 8px 0; }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
+.room-assignments-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.room-assignment-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; transition: background 0.15s; }
+.room-assignment-item:hover { background: #f1f5f9; }
+.assignment-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.assignment-room { font-size: 16px; font-weight: 700; color: #0f172a; }
 
-.section-header h2 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  position: relative;
-}
+.assignment-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pf { display: flex; flex-direction: column; gap: 3px; }
+.pf-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.8px; }
+.pf-val { font-size: 13px; color: #0f172a; }
 
-.section-header h2::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 40px;
-  height: 4px;
-  background: #6c5ce7;
-  border-radius: 2px;
-}
+/* Not logged in */
+.not-logged-in { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #94a3b8; }
+.not-logged-in-title { font-size: 15px; font-weight: 600; color: #475569; }
+.not-logged-in-sub { font-size: 13px; color: #94a3b8; text-align: center; max-width: 360px; line-height: 1.5; }
 
-.badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.badge--active    { background: #f0fdf4; color: #16a34a; } .badge--active    .badge-dot { background: #16a34a; }
+.badge--suspended { background: #fef2f2; color: #dc2626; } .badge--suspended .badge-dot { background: #dc2626; }
 
-.badge.eligible {
-  background: #e1f5fe;
-  color: #0288d1;
-}
+/* Buttons */
+.cancel-btn { padding: 9px 18px; background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; font-size: 13px; color: #64748b; cursor: pointer; }
+.cancel-btn:hover:not(:disabled) { background: #fef2f2; color: #ef4444; border-color: #fca5a5; }
+.cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.submit-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 22px; background: #0f172a; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.submit-btn:hover:not(:disabled) { background: #1e293b; }
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #64748b; }
 
-.badge.ineligible {
-  background: #ffebee;
-  color: #d32f2f;
-}
+/* Rooms */
+.section-title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 10px 0 0; }
+.rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.room-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.15s, transform 0.15s; }
+.room-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); }
+.room-header { padding: 16px 16px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8fafc; }
+.room-type { font-size: 10px; font-weight: 700; background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.room-price { font-size: 15px; font-weight: 700; color: #0f172a; }
+.room-body { padding: 16px; flex-grow: 1; }
+.room-number-lg { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px; }
+.occupancy-wrap { display: flex; flex-direction: column; gap: 6px; }
+.occupancy-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+.occupancy-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; background: #3b82f6; border-radius: 3px; }
+.room-card.full .bar-fill { background: #ef4444; }
+.room-footer { padding: 0 16px 16px; }
 
-/* Assignments Grid */
-.assignments-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
-}
-
-.assignment-card {
-  position: relative;
-  background: #fff;
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-  overflow: hidden;
-  transition: transform 0.3s ease;
-}
-
-.assignment-card:hover {
-  transform: translateY(-5px);
-}
-
-.card-glow {
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at center, rgba(108, 92, 231, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.room-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #6c5ce7;
-  margin-bottom: 15px;
-}
-
-.assignment-details p {
-  margin: 8px 0;
-  font-size: 0.95rem;
-  color: #636e72;
-}
-
-.assignment-details span {
-  font-weight: 600;
-  color: #2d3436;
-}
-
-.btn-cancel {
-  margin-top: 20px;
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #fab1a0;
-  background: transparent;
-  color: #e17055;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-cancel:hover {
-  background: #fff5f3;
-}
-
-/* Rooms Grid */
-.rooms-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-}
-
-.room-card {
-  background: #fff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  border: 1px solid #f1f2f6;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.room-card:hover {
-  box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-  border-color: #6c5ce7;
-}
-
-.room-type {
-  background: #f8f9fa;
-  padding: 8px 15px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #b2bec3;
-  letter-spacing: 1px;
-}
-
-.room-info {
-  padding: 20px;
-  flex-grow: 1;
-}
-
-.room-info h3 {
-  margin: 0 0 15px 0;
-  font-size: 1.3rem;
-}
-
-.occupancy-bar {
-  height: 8px;
-  background: #f1f2f6;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #6c5ce7, #a29bfe);
-  border-radius: 4px;
-}
-
-.occupancy-text {
-  font-size: 0.85rem;
-  color: #636e72;
-  margin-bottom: 15px;
-}
-
-.price {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #2d3436;
-}
-
-.price small {
-  font-size: 0.9rem;
-  color: #b2bec3;
-  font-weight: 400;
-}
-
-.room-actions {
-  padding: 20px;
-  padding-top: 0;
-}
-
-.btn-assign {
-  width: 100%;
-  padding: 14px;
-  background: #6c5ce7;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-assign:hover {
-  background: #5b4bc4;
-}
-
-.btn-full, .btn-disabled {
-  width: 100%;
-  padding: 14px;
-  background: #f1f2f6;
-  color: #b2bec3;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: not-allowed;
-}
-
-.empty-state, .loading-state {
-  text-align: center;
-  padding: 60px;
-  background: #f8f9fa;
-  border-radius: 16px;
-  color: #b2bec3;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(108, 92, 231, 0.1);
-  border-left-color: #6c5ce7;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+.empty-state { text-align: center; padding: 30px; font-size: 13px; color: #94a3b8; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; }
+.spinner { width: 13px; height: 13px; border: 2px solid rgba(0,0,0,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
