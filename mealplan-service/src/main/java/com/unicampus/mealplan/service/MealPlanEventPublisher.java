@@ -16,8 +16,8 @@ public class MealPlanEventPublisher {
     private final RabbitTemplate rabbitTemplate;
 
     public void publishMealPlanSubscribed(Map<String, Object> event) {
-        log.info("Publishing mealplan.subscribed event: {}", event);
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME, "mealplan.subscribed", event);
+        log.info("Publishing meal plan subscription to billing: {}", event);
+        rabbitTemplate.convertAndSend("billing.events", "mealplan.fee.charged", event);
     }
 
     public void publishMealPlanCancelled(Map<String, Object> event) {

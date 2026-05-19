@@ -24,9 +24,10 @@ public class BillingEventListener {
     private static final BigDecimal DAILY_FINE_RATE = new BigDecimal("2.50");
 
     @RabbitListener(queues = RabbitConfig.BILLING_QUEUE)
-    public void handleEvent(String messageJson) {
-        log.info("Received billing event: {}", messageJson);
+    public void handleEvent(org.springframework.amqp.core.Message message) {
         try {
+            String messageJson = new String(message.getBody(), java.nio.charset.StandardCharsets.UTF_8);
+            log.info("Received billing event: {}", messageJson);
             JsonNode node = objectMapper.readTree(messageJson);
             
             if (node.has("daysOverdue") && node.has("bookId")) {

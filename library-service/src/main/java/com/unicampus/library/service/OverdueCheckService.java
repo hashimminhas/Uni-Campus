@@ -22,6 +22,7 @@ public class OverdueCheckService {
     private final RabbitTemplate rabbitTemplate;
 
     @Scheduled(cron = "0 0 1 * * ?") // Runs daily at 1 AM
+    @org.springframework.transaction.annotation.Transactional
     public void checkOverdueLoans() {
         log.info("Starting scheduled overdue loan check");
         LocalDate today = LocalDate.now();

@@ -10,9 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,7 @@ public class DormitoryService {
     private final RoomRepository roomRepository;
     private final RoomAssignmentRepository roomAssignmentRepository;
     private final StudentServiceClient studentServiceClient;
+    private final RabbitTemplate rabbitTemplate;
 
     public Room addRoom(Room room) {
         room.setRoomId(UUID.randomUUID());
@@ -76,8 +80,20 @@ public class DormitoryService {
         }
         roomRepository.save(room);
 
-        // 6. Simulate publishing housing.fee.charged event to Billing Service
-        log.info("Published housing.fee.charged event for studentId: {} and roomId: {} for semester: {}", studentId, roomId, semester);
+        // 6. Publish housing.fee.charged event to Billing Service via RabbitMQ
+        try {
+            Map<String, Object> event = new HashMap<>();
+            event.put("studentId", studentId.toString());
+            event.put("roomId", roomId.toString());
+            event.put("semester", semester);
+            event.put("amount", "500.00"); // Standard housing fee amount
+            event.put("timestamp", new Date());
+
+            log.info("Publishing housing.fee.charged event: {}", event);
+            rabbitTemplate.convertAndSend("billing.events", "housing.fee.charged", event);
+        } catch (Exception e) {
+            log.error("Failed to publish housing.fee.charged event to RabbitMQ", e);
+        }
 
         return assignment;
     }

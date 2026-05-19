@@ -72,10 +72,11 @@ public class MealPlanService {
 
         // 4. Publish event
         Map<String, Object> event = new HashMap<>();
-        event.put("subscriptionId", savedSubscription.getSubscriptionId());
-        event.put("studentId", studentId);
-        event.put("planId", planId);
-        event.put("amount", plan.getPrice());
+        event.put("subscriptionId", savedSubscription.getSubscriptionId().toString());
+        event.put("studentId", studentId.toString());
+        event.put("planId", planId.toString());
+        event.put("amount", plan.getPrice().toString());
+        event.put("semester", plan.getSemester());
         event.put("timestamp", new Date());
 
         eventPublisher.publishMealPlanSubscribed(event);
