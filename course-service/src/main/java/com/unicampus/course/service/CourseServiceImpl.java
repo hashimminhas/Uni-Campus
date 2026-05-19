@@ -114,7 +114,8 @@ public class CourseServiceImpl implements CourseService {
             courseRepository.save(course);
         }
 
-        courseEventPublisher.publishEnrollmentConfirmed(course, studentId);
+        try { courseEventPublisher.publishEnrollmentConfirmed(course, studentId); }
+        catch (Exception e) { /* messaging failure must not block enrollment */ }
 
         return EnrollmentResponse.builder()
                 .courseId(course.getCourseId())
@@ -144,7 +145,8 @@ public class CourseServiceImpl implements CourseService {
             }
         }
 
-        courseEventPublisher.publishCourseDropped(course, studentId);
+        try { courseEventPublisher.publishCourseDropped(course, studentId); }
+        catch (Exception e) { /* messaging failure must not block drop */ }
 
         return EnrollmentResponse.builder()
                 .courseId(course.getCourseId())

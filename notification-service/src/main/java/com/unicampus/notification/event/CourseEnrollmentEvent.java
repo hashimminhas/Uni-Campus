@@ -10,8 +10,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CourseEnrollmentEvent {
-    private UUID studentId;
-    private String courseCode;
+    private String eventType;   // "enrollment.confirmed" or "course.dropped"
+    private String studentId;   // UUID as String
+    private UUID courseId;
     private String courseName;
-    private String action; // "ENROLLED" or "DROPPED"
 }

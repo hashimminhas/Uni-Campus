@@ -101,6 +101,7 @@ services:
       DB_PORT: 5432
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      STUDENT_SERVICE_URL: http://student-service:8081
     depends_on:
       postgres:
         condition: service_healthy
@@ -117,6 +118,7 @@ services:
       DB_PORT: 5432
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
+      COURSE_SERVICE_URL: http://course-service:8083
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,7 +1,7 @@
 package com.unicampus.course.integration;
 
 public record StudentValidationResponse(
-        Boolean valid,
+        Boolean isValid,
         String status,
         String message
 ) {

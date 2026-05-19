@@ -19,7 +19,7 @@ public class StudentCourseController {
 
     private final CourseService courseService;
 
-    @GetMapping("/students/{studentId}/courses")
+    @GetMapping("/courses/student/{studentId}")
     @Operation(summary = "Get all courses where a student is actively enrolled")
     public ResponseEntity<List<CourseResponse>> getStudentCourses(@PathVariable String studentId) {
         return ResponseEntity.ok(courseService.getStudentCourses(studentId));

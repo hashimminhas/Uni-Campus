@@ -43,10 +43,6 @@ spring:
             - Path=/api/students/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: studentServiceCB
-                fallbackUri: forward:/fallback
 
         # Notification Service (port 8082) — paths: /notifications/**
         - id: notification-service
@@ -55,10 +51,6 @@ spring:
             - Path=/api/notifications/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: notificationServiceCB
-                fallbackUri: forward:/fallback
 
         # Course Service (port 8083) — paths: /courses/**
         - id: course-service
@@ -67,33 +59,20 @@ spring:
             - Path=/api/courses/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: courseServiceCB
-                fallbackUri: forward:/fallback
 
-        # Exam Service (port 8084) — paths: /exams/**, /students/** (exam context)
+        # Exam Service (port 8084) — paths: /exams/**
         - id: exam-service
           uri: ${EXAM_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/exams/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: examServiceCB
-                fallbackUri: forward:/fallback
 
         # Library Service (port 8085) — paths: /api/library/**
         - id: library-service
           uri: ${LIBRARY_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/library/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: libraryServiceCB
-                fallbackUri: forward:/fallback
 
         # Billing Service (port 8086)
         - id: billing-service
@@ -102,10 +81,6 @@ spring:
             - Path=/api/billing/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: billingServiceCB
-                fallbackUri: forward:/fallback
 
         # Dormitory Service (port 8087)
         - id: dormitory-service
@@ -114,10 +89,6 @@ spring:
             - Path=/api/dormitory/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: dormitoryServiceCB
-                fallbackUri: forward:/fallback
 
         # Meal Plan Service (port 8088)
         - id: mealplan-service
@@ -126,10 +97,6 @@ spring:
             - Path=/api/mealplan/**
           filters:
             - StripPrefix=1
-            - name: CircuitBreaker
-              args:
-                name: mealplanServiceCB
-                fallbackUri: forward:/fallback
 
 # ── Actuator ─────────────────────────────────────────────────────
 management:

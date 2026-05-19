@@ -26,20 +26,18 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_COURSE_QUEUE)
     public void handleCourseEvent(CourseEnrollmentEvent event) {
-        log.info("Course event received — student: {}, action: {}", event.getStudentId(), event.getAction());
+        log.info("Course event received — student: {}, type: {}", event.getStudentId(), event.getEventType());
 
         String subject, body;
-        if ("DROPPED".equalsIgnoreCase(event.getAction())) {
+        if ("course.dropped".equalsIgnoreCase(event.getEventType())) {
             subject = "Course Dropped: " + event.getCourseName();
-            body    = "You have been dropped from " + event.getCourseName()
-                    + " (" + event.getCourseCode() + ").";
+            body    = "You have been dropped from " + event.getCourseName() + ".";
         } else {
             subject = "Enrolled in " + event.getCourseName();
-            body    = "You have been successfully enrolled in " + event.getCourseName()
-                    + " (" + event.getCourseCode() + ").";
+            body    = "You have been successfully enrolled in " + event.getCourseName() + ".";
         }
 
-        save(event.getStudentId().toString(), subject, body);
+        save(event.getStudentId(), subject, body);
     }
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_EXAM_QUEUE)
