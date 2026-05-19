@@ -304,8 +304,13 @@ export default {
 
         if (chargesRes.ok) {
           const rawCharges = await chargesRes.json();
-          // Sort charges with latest first
-          this.charges = rawCharges.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          if (Array.isArray(rawCharges)) {
+            // Sort charges with latest first
+            this.charges = rawCharges.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          } else {
+            console.error('Expected array of charges, but got:', rawCharges);
+            throw new Error(rawCharges.message || 'Failed to parse billing charge records.');
+          }
         } else if (chargesRes.status === 404) {
           this.charges = [];
         } else {

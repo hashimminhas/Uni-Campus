@@ -3,6 +3,7 @@ import LandingView from '../views/LandingView.vue'
 import HomeView from '../views/HomeView.vue'
 import LibraryView from '../views/LibraryView.vue'
 import AdminView from '../views/AdminView.vue'
+import DormitoryView from '../views/DormitoryView.vue'
 import StudentsView from '../views/StudentsView.vue'
 import BillingView from '../views/BillingView.vue'
 import ExamView from '../views/ExamView.vue'
@@ -13,6 +14,8 @@ const routes = [
   { path: '/courses',  name: 'courses',        component: HomeView },
   { path: '/library',  name: 'library',        component: LibraryView },
   { path: '/billing',  name: 'billing',        component: BillingView },
+  { path: '/dormitory',name: 'dormitory',      component: DormitoryView },
+  { path: '/meal-plan',name: 'meal-plan',      component: () => import('../views/MealPlanView.vue') },
   { path: '/exam',     name: 'exam',           component: ExamView },
   { path: '/admin',    name: 'admin',          component: AdminView },
 ]
